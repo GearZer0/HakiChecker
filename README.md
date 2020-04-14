@@ -8,3 +8,8 @@ SOC_ReputationChecker.py -hash list.txt
 SOC_ReputationChecker.py -hash list.txt -d 15
 (virustotal only): SOC_ReputationChecker.py -file list.txt
 (virustotal only): SOC_ReputationChecker.py -file list.txt -d 15
+
+The action of every agent <br />
+  into the world <br />
+starts <br />
+  from their physical selves. <br />
