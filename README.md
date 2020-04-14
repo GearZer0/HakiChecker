@@ -1,6 +1,6 @@
 # SOC_ReputationChecker
-
--url list.txt <br />              test  
+<pre>
+-url list.txt		test  
 -ip list.txt               test  
 SOC_ReputationChecker.py -url list.txt -d 15
 SOC_ReputationChecker.py -ip list.txt -d 15
@@ -8,8 +8,4 @@ SOC_ReputationChecker.py -hash list.txt
 SOC_ReputationChecker.py -hash list.txt -d 15
 (virustotal only): SOC_ReputationChecker.py -file list.txt
 (virustotal only): SOC_ReputationChecker.py -file list.txt -d 15
-
-The action of every agent <br />
-  into the world <br />
-starts <br />
-  from their physical selves. <br />
+</pre>
