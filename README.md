@@ -1,15 +1,14 @@
 # SOC_ReputationChecker
 <pre>
 
-Check the reputation of IP addresses, Url, Hashes or Files from mutiple OSINT.
-
-
+This script check the reputation of IP addresses, Url, Hashes or Files from mutiple OSINT.
 
 <b>Take screenshot of Url</b> (urlscan.io)
-Whenever a url requestioned, screenshot of the url will be automatically taken and placed in images folder. Default delay is set at 30s, -d will overwrite the default delay.
+Whenever a url requested, screenshot of the url will be automatically taken and placed in images folder. 
+Default delay is set at 30s, -d will overwrite the default delay.
 
 <b>Mutiple file scan</b> (Virustotal) - Maximum 32MB
-
+Upload mutiple file to Virustotal. Put each directory of the file into .txt
 
 <b>Hash equivalent</b> (Virustotal) 
 
@@ -19,22 +18,19 @@ IBM, AbusedIPDB, FraudGuard, Auth0
 <b>url</b>
 Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
-
 <b>Command</b>
 -ip list.txt		Choose IP Address as Parameter 
 -url list.txt		Choose url as Parameter 
 -hash list.txt		Choose hash as Parameter 
 -file list.txt		Choose file as Parameter
--d x			set delay between search. example : -url -d 15 list.txt
+-d x			set delay between search
 
-
-
-
-
-
-
-
-
+<b>Examples</b>
+python SOC_ReputationChecker.py -ip list.txt 
+python SOC_ReputationChecker.py -ip -d 2 list.txt 
+python SOC_ReputationChecker.py -url -d 30 list.txt 
+python SOC_ReputationChecker.py -hash list.txt 
+python SOC_ReputationChecker.py -file -d 90 list.txt 
 
 <b>Requirements</b>
 IBM : https://exchange.xforce.ibmcloud.com/
@@ -58,13 +54,11 @@ Auth0 : https://auth0.com/signals/ip
 	- input API KEY and API PASSWORD into API KEYS section in the script
 	- Public API : 4,000 API requests per day. 40,000 hits per day, each API request consume 10 hits
 
-
-
-
 <b>Known issue</b>
-IBM returns N/A if url is too long. This is IBM API issue.
-urlscan.io returns N/A if the delay is not long enough (Please put at least 30 seconds i.e -d 30)
-Virustotal file upload returns N/A if the delay is not long enough (Please put at least 60 seconds i.e -d 60)
-Virustotal file upload returns N/A despite the delay is long enough at first upload, sometimes it takes more time for the server to process your file
+- IBM returns N/A if url is too long. This is IBM API issue.
+- urlscan.io returns N/A if the delay is not long enough (Please put at least 30 seconds i.e -d 30)
+- Virustotal file upload returns N/A if the delay is not long enough (Please put at least 60 seconds i.e -d 60)
+- Virustotal file upload returns N/A despite the delay is long enough at first upload, 
+  sometimes it takes more time for the server to process your file
 
 </pre>
