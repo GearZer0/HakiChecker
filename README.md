@@ -1,6 +1,9 @@
 # SOC_ReputationChecker
 <pre>
--url list.txt		test  
+
+Check the reputation of IP addresses, Url, Hashes, Files and take screenshot of Url, All in bulk from mutiple OSINT
+
+-url list.txt		Check
 -ip list.txt		test  
 -url list.txt		test
 -ip list.txt		test
