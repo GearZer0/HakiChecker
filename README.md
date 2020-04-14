@@ -1,6 +1,6 @@
 # SOC_ReputationChecker
 
--url list.txt              test  
+-url list.txt <br />              test  
 -ip list.txt               test  
 SOC_ReputationChecker.py -url list.txt -d 15
 SOC_ReputationChecker.py -ip list.txt -d 15
