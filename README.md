@@ -1,8 +1,8 @@
 # SOC_ReputationChecker
 
-SOC_ReputationChecker.py -url list.txt
-SOC_ReputationChecker.py -ip list.txt
-SOC_ReputationChecker.py -url list.txt -d 15
+SOC_ReputationChecker.py -url list.txt  
+SOC_ReputationChecker.py -ip list.txt  
+SOC_ReputationChecker.py -url list.txt -d 15  
 SOC_ReputationChecker.py -ip list.txt -d 15
 SOC_ReputationChecker.py -hash list.txt
 SOC_ReputationChecker.py -hash list.txt -d 15
