@@ -1,1 +1,1 @@
-Insert API key here
+Username:Password
