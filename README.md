@@ -83,14 +83,14 @@ urlscan.io : https://urlscan.io/
 GoogleSafeBrowsing : https://developers.google.com/safe-browsing
 	- Login to your Gmail account and follow the guide below 
 
-Guide : https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_generate_Google_Safe_Browsing_API_keys
+https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_generate_Google_Safe_Browsing_API_keys
 
 Threat Definition
-THREAT_TYPE_UNSPECIFIED 	Unknown.
-MALWARE 			Malware threat type.
-SOCIAL_ENGINEERING 		Social engineering threat type.
-UNWANTED_SOFTWARE 		Unwanted software threat type.
-POTENTIALLY_HARMFUL_APPLICATION Potentially harmful application threat type.
+THREAT_TYPE_UNSPECIFIED 	  Unknown.
+MALWARE 			  Malware threat type.
+SOCIAL_ENGINEERING 		  Social engineering threat type.
+UNWANTED_SOFTWARE 		  Unwanted software threat type.
+POTENTIALLY_HARMFUL_APPLICATION   Potentially harmful application threat type.
 
 <b>Known issue</b>
 - IBM returns N/A if url is too long. This is IBM API issue.
