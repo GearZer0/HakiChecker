@@ -100,9 +100,9 @@ POTENTIALLY_HARMFUL_APPLICATION   Potentially harmful application threat type.
   sometimes it takes more time for the server to process your file
 
 <b>Experiment</b>
-- Virustotal : 	inital upload maybe just need few seconds, since the process take so long to return result, 
+- Virustotal : 	initial upload maybe just need few seconds, since the process take so long to return result, 
 		it gives N/A when delay is not enough. Since file data will be stored once it is completed. 
-		To test inital upload delay 5s, then enter same command again 
+		To test initial upload delay 5s, then enter same command again 
 
 <b>Source</b>
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
