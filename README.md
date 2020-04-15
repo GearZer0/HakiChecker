@@ -1,7 +1,7 @@
 # SOC_ReputationChecker
 <pre>
 
-This tool check the reputation of IP addresses, Url, Hashes or Files in bulk from multiple OSINT.
+This tool check the reputation of IP addresses, Urls, Hashes or Files from multiple OSINT.
 
 <b>Take screenshot of Url</b> (urlscan.io)
 Whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
