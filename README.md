@@ -26,10 +26,10 @@ Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
 <b>Examples</b>
 python SOC_ReputationChecker.py -ip list.txt 
-python SOC_ReputationChecker.py -ip -d 2 list.txt 
-python SOC_ReputationChecker.py -url -d 30 list.txt 
+python SOC_ReputationChecker.py -ip  list.txt -d 2 
+python SOC_ReputationChecker.py -url list.txt -d 30 
 python SOC_ReputationChecker.py -hash list.txt 
-python SOC_ReputationChecker.py -file -d 90 list.txt 
+python SOC_ReputationChecker.py -file list.txt -d 90 
 
 <b>Requirements</b>
 IBM : https://exchange.xforce.ibmcloud.com/
