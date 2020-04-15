@@ -1,11 +1,10 @@
 # SOC_ReputationChecker
 <pre>
 
-This script check the reputation of IP addresses, Url, Hashes or Files from mutiple OSINT.
+This tool check the reputation of IP addresses, Url, Hashes or Files in bulk from mutiple OSINT.
 
 <b>Take screenshot of Url</b> (urlscan.io)
-Whenever a url requested, screenshot of the url will be automatically taken and placed in images folder. 
-Default delay is set at 30s, -d will overwrite the default delay.
+Whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
 
 <b>Mutiple file scan</b> (Virustotal) - Maximum 32MB
 Upload mutiple file to Virustotal. Put each directory of the file into .txt
@@ -35,7 +34,7 @@ python SOC_ReputationChecker.py -file -d 90 list.txt
 <b>Requirements</b>
 IBM : https://exchange.xforce.ibmcloud.com/
 	- Login to IBM and get API KEY and API PASSWORD
-	- input API KEY and API PASSWORD into API KEYS section in the script
+	- input API KEY and API PASSWORD into API KEYS section in the script. APIKEY:APIPASSWORD
 	- Public API : 5,000 API requests per month
 	
 Fraudguard.io : https://fraudguard.io</b>

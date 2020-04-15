@@ -17,12 +17,12 @@ result_hash_name = "result_hash.csv" #save result for hash here
 fraudGuardKeys = "fraudguard_keys.txt"
 
 # API KEYS
-vt_apikey = "***REMOVED***"
-abip_apikey = "***REMOVED***"
-ibm_auth = '***REMOVED***:***REMOVED***'
-urlscan_apikey = "***REMOVED***"
-google_apikey = "***REMOVED***"
-auth0_apikey = "***REMOVED***"
+vt_apikey = "API KEY"
+abip_apikey = "API KEY"
+ibm_auth = 'APIKEY:APIPASSWORD'
+urlscan_apikey = ""
+google_apikey = "API KEY"
+auth0_apikey = "API KEY"
 
 # function to save result in csv file
 def saveRecord(data, formula):
