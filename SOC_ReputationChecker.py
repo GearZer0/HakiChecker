@@ -20,7 +20,7 @@ fraudGuardKeys = "fraudguard_keys.txt"
 vt_apikey = "API KEY"
 abip_apikey = "API KEY"
 ibm_auth = 'APIKEY:APIPASSWORD'
-urlscan_apikey = ""
+urlscan_apikey = "API KEY"
 google_apikey = "API KEY"
 auth0_apikey = "API KEY"
 
