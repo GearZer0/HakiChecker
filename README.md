@@ -80,6 +80,18 @@ urlscan.io : https://urlscan.io/
 	- input API KEY into API KEYS section in the script
 	- urlscan.io takes time to process, set delay to at least 30s
 
+GoogleSafeBrowsing : https://developers.google.com/safe-browsing
+	- Login to your Gmail account and follow the guide below 
+
+Guide : https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_generate_Google_Safe_Browsing_API_keys
+
+Threat Definition
+THREAT_TYPE_UNSPECIFIED 	Unknown.
+MALWARE 			Malware threat type.
+SOCIAL_ENGINEERING 		Social engineering threat type.
+UNWANTED_SOFTWARE 		Unwanted software threat type.
+POTENTIALLY_HARMFUL_APPLICATION Potentially harmful application threat type.
+
 <b>Known issue</b>
 - IBM returns N/A if url is too long. This is IBM API issue.
 - urlscan.io returns N/A if the delay is not long enough (Please put at least 30 seconds delay i.e -d 30)
@@ -88,10 +100,13 @@ urlscan.io : https://urlscan.io/
   sometimes it takes more time for the server to process your file
 
 <b>Experiment</b>
-- Virustotal : inital upload maybe just need few seconds, since the process take so long to return result, it gives N/A when delay is not enough.
-	Since file data will be stored once it is completed. To test inital upload delay 5s, then enter same command again 
+- Virustotal : 	inital upload maybe just need few seconds, since the process take so long to return result, 
+		it gives N/A when delay is not enough. Since file data will be stored once it is completed. 
+		To test inital upload delay 5s, then enter same command again 
 
 <b>Source</b>
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
 https://faq.fraudguard.io/threat-levels
+https://developers.google.com/safe-browsing/v4/lookup-api
+https://developers.google.com/safe-browsing/v4/reference/rest/v4/ThreatType
 </pre>
