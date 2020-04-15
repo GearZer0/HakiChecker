@@ -44,6 +44,13 @@ Fraudguard.io : https://fraudguard.io</b>
 	- (optional) more than one API KEY into each line, it will rotate between API KEY
 	- Public API : 1,000 API requests per month
 
+Score Definition
+1 = No Risk
+2 = Spam or Website Abuse (excessive scraping, resource linking or undesired site automation)
+3 = Open Public Proxy
+4 = Tor Node
+5 = Honeypot, Malware, Botnet or DDoS Attack
+
 AbuseIPDB : https://www.abuseipdb.com/
 	- Login to AbuseIPDB and get API KEY 
 	- input API KEY into API KEYS section in the script
@@ -53,6 +60,14 @@ Auth0 : https://auth0.com/signals/ip
  	- Login to Auth0 and get API KEY 
 	- input API KEY and API PASSWORD into API KEYS section in the script
 	- Public API : 4,000 API requests per day. 40,000 hits per day, each API request consume 10 hits
+
+Score Definition
+0: Auth0 Signals is neutral about the IP address given. It means the service cannot find the IP address in any given 
+   individual service and cannot classify the IP as risky.
+-1: Auth0 Signals has detected the IP address in one of the checks. This is the lowest level of risk of an IP address.
+-2: Auth0 Signals has detected the IP address in two checks. This is the medium level of risk of an IP address.
+-3: Auth0 Signals has detected the IP address in all the checks. This is the highest risk level of an IP address.
+
 
 Virustotal : https://www.virustotal.com/gui/home
  	- Login to Virustotal and get API KEY 
@@ -76,4 +91,7 @@ urlscan.io : https://urlscan.io/
 - Virustotal : inital upload maybe just need few seconds, since the process take so long to return result, it gives N/A when delay is not enough.
 	Since file data will be stored once it is completed. To test inital upload delay 5s, then enter same command again 
 
+<b>Source</b>
+https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
+https://faq.fraudguard.io/threat-levels
 </pre>
