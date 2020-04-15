@@ -9,7 +9,7 @@ Whenever a url requested, screenshot of the url will be automatically taken and 
 <b>Mutiple file scan</b> (Virustotal) - Maximum 32MB
 Upload mutiple file to Virustotal. Put each directory of the file into .txt
 
-<b>Hash equivalent</b> (Virustotal) 
+<b>Hash reputation and Hash equivalent Hash</b> (Virustotal) 
 
 <b>IP Address</b> (All-in-One)
 IBM, AbusedIPDB, FraudGuard, Auth0
