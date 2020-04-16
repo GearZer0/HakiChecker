@@ -11,10 +11,10 @@ Upload multiple file to Virustotal. Put each directory of the file into .txt
 
 <b>Hash reputation and Hash equivalent Hash</b> (Virustotal) 
 
-<b>IP Address</b> (All-in-One)
+<b>IP Address</b>
 IBM, AbusedIPDB, FraudGuard, Auth0
 
-<b>url</b> (All-in-One)
+<b>url</b>
 Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
 <b>Command</b>
