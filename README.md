@@ -1,7 +1,13 @@
 # HakiChecker
 <pre>
 
-This tool check the reputation of IP addresses, Urls, Hashes or Files from multiple OSINT.
+This tool check the reputation of IP addresses, Urls, Hashes or Files from multiple OSINT. Everything All-in-One!
+
+<b>IP Address</b>
+IBM, AbusedIPDB, FraudGuard, Auth0
+
+<b>url</b>
+Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
 <b>Take screenshot of Url</b> (urlscan.io)
 Whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
@@ -10,12 +16,6 @@ Whenever a url requested, screenshot of the url will be automatically taken and 
 Upload multiple file to Virustotal. Put each directory of the file into .txt
 
 <b>Hash reputation and Hash equivalent Hash</b> (Virustotal) 
-
-<b>IP Address</b>
-IBM, AbusedIPDB, FraudGuard, Auth0
-
-<b>url</b>
-Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
 <b>Command</b>
 -ip list.txt		Choose IP Address as Parameter 
