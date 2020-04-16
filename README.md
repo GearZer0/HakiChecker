@@ -43,12 +43,12 @@ Fraudguard.io : https://fraudguard.io</b>
 	- (optional) more than one API KEY into each line, it will rotate between API KEY
 	- Public API : 1,000 API requests per month
 
-Score Definition
-1 = No Risk
-2 = Spam or Website Abuse (excessive scraping, resource linking or undesired site automation)
-3 = Open Public Proxy
-4 = Tor Node
-5 = Honeypot, Malware, Botnet or DDoS Attack
+	Score Definition
+	1 = No Risk
+	2 = Spam or Website Abuse (excessive scraping, resource linking or undesired site automation)
+	3 = Open Public Proxy
+	4 = Tor Node
+	5 = Honeypot, Malware, Botnet or DDoS Attack
 
 AbuseIPDB : https://www.abuseipdb.com/
 	- Login to AbuseIPDB and get API KEY 
@@ -60,12 +60,15 @@ Auth0 : https://auth0.com/signals/ip
 	- input API KEY and API PASSWORD into API KEYS section in the script
 	- Public API : 4,000 API requests per day. 40,000 hits per day, each API request consume 10 hits
 
-Score Definition
-0: Auth0 Signals is neutral about the IP address given. It means the service cannot find the IP address in any given 
-   individual service and cannot classify the IP as risky.
--1: Auth0 Signals has detected the IP address in one of the checks. This is the lowest level of risk of an IP address.
--2: Auth0 Signals has detected the IP address in two checks. This is the medium level of risk of an IP address.
--3: Auth0 Signals has detected the IP address in all the checks. This is the highest risk level of an IP address.
+	Score Definition
+	0: Auth0 Signals is neutral about the IP address given. It means the service cannot find the IP address 
+	   in any given individual service and cannot classify the IP as risky.
+	-1: Auth0 Signals has detected the IP address in one of the checks. This is the lowest level of risk of 
+	    an IP address.
+	-2: Auth0 Signals has detected the IP address in two checks. This is the medium level of risk of 
+	    an IP address.
+	-3: Auth0 Signals has detected the IP address in all the checks. This is the highest risk level 
+	    of an IP address.
 
 
 Virustotal : https://www.virustotal.com/gui/home
@@ -82,14 +85,14 @@ urlscan.io : https://urlscan.io/
 GoogleSafeBrowsing : https://developers.google.com/safe-browsing
 	- Login to your Gmail account and follow the guide below 
 
-https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_generate_Google_Safe_Browsing_API_keys
+	Threat Definition
+	THREAT_TYPE_UNSPECIFIED 	  Unknown.
+	MALWARE 			  Malware threat type.
+	SOCIAL_ENGINEERING 		  Social engineering threat type.
+	UNWANTED_SOFTWARE 		  Unwanted software threat type.
+	POTENTIALLY_HARMFUL_APPLICATION   Potentially harmful application threat type.
 
-Threat Definition
-THREAT_TYPE_UNSPECIFIED 	  Unknown.
-MALWARE 			  Malware threat type.
-SOCIAL_ENGINEERING 		  Social engineering threat type.
-UNWANTED_SOFTWARE 		  Unwanted software threat type.
-POTENTIALLY_HARMFUL_APPLICATION   Potentially harmful application threat type.
+https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_generate_Google_Safe_Browsing_API_keys
 
 <b>Known issue</b>
 - IBM returns N/A if url is too long. This is IBM API issue.
