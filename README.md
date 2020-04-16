@@ -25,11 +25,11 @@ Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 -d x			set delay between search
 
 <b>Examples</b>
-python SOC_ReputationChecker.py -ip list.txt 
-python SOC_ReputationChecker.py -ip  list.txt -d 2 
-python SOC_ReputationChecker.py -url list.txt -d 30 
-python SOC_ReputationChecker.py -hash list.txt 
-python SOC_ReputationChecker.py -file list.txt -d 90 
+python HakiChecker.py -ip list.txt 
+python HakiChecker.py -ip  list.txt -d 2 
+python HakiChecker.py -url list.txt -d 30 
+python HakiChecker.py -hash list.txt 
+python HakiChecker.py -file list.txt -d 90 
 
 <b>Requirements</b>
 
