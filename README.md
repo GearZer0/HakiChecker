@@ -32,6 +32,9 @@ python SOC_ReputationChecker.py -hash list.txt
 python SOC_ReputationChecker.py -file list.txt -d 90 
 
 <b>Requirements</b>
+
+Python 3
+
 IBM : https://exchange.xforce.ibmcloud.com/
 	- Login to IBM and get API KEY and API PASSWORD
 	- input API KEY and API PASSWORD into API KEYS section in the script. APIKEY:APIPASSWORD
