@@ -116,7 +116,6 @@ A : Virustotal takes some time to to finish file upload process (the bigger the 
 Q : Why screenshot requires long delay
 A : urlscan.io takes some time to to finish the process
 
-
 <b>Source</b>
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
 https://faq.fraudguard.io/threat-levels
