@@ -104,17 +104,18 @@ https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_gen
 - Virustotal file upload returns N/A despite the delay is long enough at first upload, 
   sometimes it takes more time for the server to process your file
 
-<b>Experiment</b>
-- Virustotal : 	initial upload maybe just need few seconds, since the process take so long to return result, 
-		it gives N/A when delay is not enough. Since file data will be stored once it is completed. 
-		To test initial upload delay 5s, let it finish then enter same command again after 2 minutes 
-
 <b>FAQ</b>
 Q : Why file upload requires long delay? 
-A : Virustotal takes some time to to finish file upload process (the bigger the file the longer the delay)
+A : Virustotal takes some time to finish the file upload process (the bigger the file the longer the delay)
 
 Q : Why screenshot requires long delay
 A : urlscan.io takes some time to to finish the process
+
+<b>Experiment</b>
+- Virustotal : 	initial upload maybe just need few seconds, since the process take so long to return result, 
+		it gives N/A when delay is not enough. Since file data will be stored once it is completed. 
+		To test initial upload delay 5s, let the VS finish the computation then enter same command 
+		again after 2 minutes 
 
 <b>Source</b>
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
