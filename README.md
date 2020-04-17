@@ -25,11 +25,11 @@ Upload multiple file to Virustotal. Put each directory of the file into .txt
 -d x			set delay between search
 
 <b>Examples</b>
-python HakiChecker.py -ip list.txt 
-python HakiChecker.py -ip  list.txt -d 2 
-python HakiChecker.py -url list.txt -d 30 
-python HakiChecker.py -hash list.txt 
-python HakiChecker.py -file list.txt -d 90 
+python HakiChecker.py -ip list.txt 		check IP address with no delay
+python HakiChecker.py -url  list.txt -d 30	check url with 30 seconds delay (screenshot mode) 
+python HakiChecker.py -url list.txt -d 2 	check url with 2 seconds delay (no screenshot mode)
+python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
+python HakiChecker.py -file list.txt -d 90      check file with 90 seconds delay
 
 <b>Requirements</b>
 
@@ -107,7 +107,15 @@ https://www.synology.com/en-us/knowledgebase/SRM/tutorial/Safe_Access/How_to_gen
 <b>Experiment</b>
 - Virustotal : 	initial upload maybe just need few seconds, since the process take so long to return result, 
 		it gives N/A when delay is not enough. Since file data will be stored once it is completed. 
-		To test initial upload delay 5s, then enter same command again 
+		To test initial upload delay 5s, let it finish then enter same command again after 2 minutes 
+
+<b>FAQ</b>
+Q : Why file upload requires long delay? 
+A : Virustotal takes some time to to finish file upload process (the bigger the file the longer the delay)
+
+Q : Why screenshot requires long delay
+A : urlscan.io takes some time to to finish the process
+
 
 <b>Source</b>
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
