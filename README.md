@@ -26,7 +26,7 @@ Upload multiple file to Virustotal. Put each directory of the file into .txt
 
 <b>Examples</b>
 python HakiChecker.py -ip list.txt 		check IP address with no delay
-python HakiChecker.py -url  list.txt -d 30	check url with 60 seconds delay (screenshot mode) 
+python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
 python HakiChecker.py -url list.txt -d 2 	check url with 2 seconds delay (no screenshot mode)
 python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
 python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
