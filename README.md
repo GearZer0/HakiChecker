@@ -45,7 +45,7 @@ FILE
 - python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
 
 
-<b>Safe or To block?</b>
+<b>Safe or block?</b>
 The logic to calculate if the url/ip to display "To block" at the <b>Action</b> column of the output 
 is "if anything that does not belong to their default score if no IOC is found", will be flagged 
 as "To block"
