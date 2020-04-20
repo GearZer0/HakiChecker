@@ -23,7 +23,7 @@ ibm_auth = 'APIKEY:APIPASSWORD'
 urlscan_apikey = "API KEY"
 google_apikey = "API KEY"
 auth0_apikey = "API KEY"
-hybrid_apikey = "NOT YET READY"
+hybrid_apikey = "NOT READY"
 
 # function to save result in csv file
 def saveRecord(data, formula):
