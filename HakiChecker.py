@@ -200,7 +200,7 @@ def urlscan(url):
     if delay is not None:
         sleep(delay)
     else:
-        sleep(30)
+        sleep(60)
     result = requests.get(nextpage).json()
     score = result['verdicts']['overall']['score']
     sleep(2)
