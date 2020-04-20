@@ -25,11 +25,21 @@ Upload multiple file to Virustotal. Put each directory of the file into .txt
 -d x			set delay between search
 
 <b>Examples</b>
-python HakiChecker.py -ip list.txt 		check IP address with no delay
-python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
-python HakiChecker.py -url list.txt -d 2 	check url with 2 seconds delay (no screenshot mode)
-python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
-python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
+IP
+- python HakiChecker.py -ip list.txt 		check IP address with no delay
+- python HakiChecker.py -sip xx.xx.xx.xx	check single IP address
+
+URL
+- python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
+- python HakiChecker.py -url list.txt -d 15 	check url with 15 seconds delay (no screenshot mode)
+- python HakiChecker.py -surl xxx		check single url
+
+HASH
+- python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
+- python HakiChecker.py -shash xxxxxx		check single hash
+
+FILE
+- python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
 
 <b>Requirements</b>
 
@@ -77,7 +87,7 @@ Auth0 : https://auth0.com/signals/ip
 Virustotal : https://www.virustotal.com/gui/home
  	- Login to Virustotal and get API KEY 
 	- input API KEY into API KEYS section in the script
-	- Public API : 4 requests per minute. Set at least 15s delay i.e -d 15
+	- <b>Public API : 4 requests per minute. Set at least 15s delay i.e -d 15</b>
 	- For file upload, set at least 60s.
 
 urlscan.io : https://urlscan.io/
