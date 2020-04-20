@@ -22,6 +22,9 @@ Upload multiple file to Virustotal. Put each directory of the file into .txt
 -url list.txt		Choose url as Parameter 
 -hash list.txt		Choose hash as Parameter 
 -file list.txt		Choose file as Parameter
+-sip xx.xx.xx.xx	check single IP address
+-surl xxxxxx		check single url
+-shash xxxxxxxx		check single hash
 -d x			set delay between search
 
 <b>Examples</b>
@@ -40,6 +43,28 @@ HASH
 
 FILE
 - python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
+
+
+<b>Safe or To block?</b>
+The logic to calculate if the url/ip to display "To block" at the <b>Action</b> column of the output 
+is "if anything that does not belong to their default score if no IOC is found", will be flagged 
+as "To block"
+
+Below are the Safe score (their default score if no IOC is found)
+
+  URL
+    - IBM : 1 out of 10
+    - AbuseIPDB : 0 out of 100
+    - FraudGuard : 1 out of 5
+    - Auth0 : 0
+
+   IP
+    - Virustotal : 0 out of x
+    - IBM : 1 out of 10
+    - urlscan.io : 0 out of 100
+    - GoogleSafeBrowsing : Safe
+
+Anything other than the above will be flagged as "To block"
 
 <b>Requirements</b>
 
