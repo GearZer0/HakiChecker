@@ -12,7 +12,7 @@ Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 <b>Take screenshot of Url</b> (urlscan.io)
 Whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
 
-<b>Multiple file scan</b> (Virustotal) - Maximum 32MB
+<b>Multiple file scan</b> (Virustotal) - Maximum 32MB per file
 Upload multiple file to Virustotal. Put each directory of the file into .txt
 
 <b>Hash reputation and Hash equivalent Hash</b> (Virustotal) 
