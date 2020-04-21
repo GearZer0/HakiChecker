@@ -1,0 +1,33 @@
+[Virus Total]
+vt_apikey =
+vt_url_api = https://www.virustotal.com/vtapi/v2/url/report
+vt_file_api = https://www.virustotal.com/vtapi/v2/file/scan
+vt_hash_api = https://www.virustotal.com/vtapi/v2/file/report
+vt_report_api = https://www.virustotal.com/vtapi/v2/file/report
+
+[AbuseIPDB]
+abip_apikey =
+abip_api = https://api.abuseipdb.com/api/v2/check
+
+[IBM]
+ibm_apikey =
+ibm_apipass =
+ibm_ip_api = https://api.xforce.ibmcloud.com/ipr/
+ibm_url_api = https://api.xforce.ibmcloud.com/url/
+
+
+[Fraud Guard]
+fg_api = https://api.fraudguard.io/ip/
+
+[URLScan]
+urlscan_apikey =
+urlscan_api = https://urlscan.io/api/v1/scan/
+urlscan_screenshot = https://urlscan.io/screenshots/
+
+[Google Safe]
+google_apikey =
+google_api = https://safebrowsing.googleapis.com/v4/threatMatches:find?key=
+
+[Auth0]
+auth0_apikey =
+auth0_api = https://signals.api.auth0.com/v2.0/ip/

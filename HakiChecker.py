@@ -11,19 +11,17 @@ import os
 from datetime import datetime
 
 # SOME CONFIG, related to input output file
-result_Dir = "Result/"  #Directory for results files
-input_Dir = "Input/"  #Directory for Input files
 result_ip_name = "result_ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for ip here
-result_url_name = "result_url_{}.csv" #save result for url here
-result_file_name = "result_file{}.csv" #save result for files here
-result_hash_name = "result_hash{}.csv" #save result for hash here
-fraudGuardKeys = "fraudguard_keys.txt"
+result_url_name = "result_url_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for url here
+result_file_name = "result_file{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for files here
+result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for hash here
 
-# API KEYS
+fraudGuardKeys = "fraudguard_keys.txt"
+config = "config.txt"
 api = {}
 
 def init():
-    with open("config.txt") as f:
+    with open(config) as f:
         for line in f:
             print(line)
             if line != "\n" and not line.startswith('['):
@@ -131,37 +129,37 @@ def virusTotalHash(hash_value):
 
 # only works for url, no ip support
 def abusedIP(ip):
-    api = "https://api.abuseipdb.com/api/v2/check"
+    #api = "https://api.abuseipdb.com/api/v2/check"
     headers = {
-            'Key': abip_apikey,
+            'Key': api.get("abip_apikey"),
             'Accept': 'application/json',
         }
     params = {
             'ipAddress': ip,
         }
-    resp = json.loads(requests.get(api, headers=headers,params=params).text)
+    resp = json.loads(requests.get(api.get("abip_apikey"), headers=headers,params=params).text)
     rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
     return rate
 
 # call to this function when url mode on
 def IBM_URL(url):
-    api = "https://api.xforce.ibmcloud.com/url/"
-    pass_data = ibm_auth
+    #api = "https://api.xforce.ibmcloud.com/url/"
+    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
     data = base64.b64encode(pass_data.encode())
     final = str(data.decode('utf-8'))
     headers = {"Authorization": "Basic "+final, "Content-Type":"application/json"}
-    resp = json.loads(requests.get(api + quote(url), headers=headers).text)
+    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=headers).text)
     rate = str(resp['result']['score']) + " out of 10"
     return rate
 
 # call to this function when ip mode on
 def IBM_IP(ip):
-    api = "https://api.xforce.ibmcloud.com/ipr/"
-    pass_data = ibm_auth
+    #api = "https://api.xforce.ibmcloud.com/ipr/"
+    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
     data = base64.b64encode(pass_data.encode())
     final = str(data.decode('utf-8'))
     headers = {"Authorization": "Basic "+final, "Content-Type":"application/json"}
-    resp = json.loads(requests.get(api + ip, headers=headers).text)
+    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=headers).text)
     rate = str(resp['history'][-1]['score']) + " out of 10"
     return rate
 
@@ -181,11 +179,12 @@ def removeOldFGKey(get_key):
         fl.write(get_key + "\n")
 
 def fraudGuard(ip):
-    api = "https://api.fraudguard.io/ip/" + ip
+    #api = "https://api.fraudguard.io/ip/" + ip
+    fg_api = api.get("fg_api") + ip
     get_key = getFGKey()
     username = get_key.split(':')[0]
     password = get_key.split(':')[1]
-    resp = requests.get(api, verify=True, auth=HTTPBasicAuth(username, password))
+    resp = requests.get(fg_api, verify=True, auth=HTTPBasicAuth(username, password))
     if resp.status_code == 429:
         print("API limit reached, changing username:password")
         removeOldFGKey(get_key)
@@ -194,14 +193,14 @@ def fraudGuard(ip):
     return rate + " out of 5"
 
 def urlscan(url):
-    api = "https://urlscan.io/api/v1/scan/"
+    #api = "https://urlscan.io/api/v1/scan/"
     headers = {
-        "API-Key": urlscan_apikey
+        "API-Key": api.get("urlscan_apikey")
         }
     data = {
         "url": url
         }
-    resp = requests.post(api,data=data,headers=headers).text
+    resp = requests.post(api.get("urlscan_api"),data=data,headers=headers).text
     uuid = json.loads(resp)['uuid']
     nextpage = json.loads(resp)['api']
     if delay is not None:
@@ -213,33 +212,34 @@ def urlscan(url):
     sleep(2)
     with open("images/" + uuid + ".png", "wb+") as img_sc:
         try:
-            img_sc.write(requests.get("https://urlscan.io/screenshots/" + uuid + ".png").content)
+            img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
         except:
             pass
     return [str(score) + " out of 100", uuid]
 
 def googleSafe(url):
-    api = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" + google_apikey
+    #api = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" + google_apikey
     headers = {
         "Content-Type": "application/json"
         }
     data = {"client":{"clientId":"mitreautoz","clientVersion":"1.5.2"},"threatInfo":{"threatTypes":["MALWARE", "SOCIAL_ENGINEERING"],"platformTypes":["WINDOWS"],"threatEntryTypes":["URL"],"threatEntries":[{"url": url}]}}
-    resp = requests.post(api,data=json.dumps(data)).json()
+    resp = requests.post(api.get("google_api")+api.get("google_apikey"),data=json.dumps(data)).json()
     if "matches" in resp.keys():
         return resp["matches"][0]["threatType"]
     else:
         return "Safe"
 
 def auth0(ip):
-    api = "https://signals.api.auth0.com/v2.0/ip/" + ip
+    #api = "https://signals.api.auth0.com/v2.0/ip/" + ip
     headers = {
         "Accept": "application/json",
-        "X-Auth-Token":auth0_apikey
+        "X-Auth-Token":api.get("auth0_apikey")
         }
-    resp = requests.get(api,headers=headers).json()
+    resp = requests.get(api.get("auth0_api") + ip,headers=headers).json()
     return resp['fullip']['score']
 
 if __name__ == "__main__":
+    init()
     try:
         os.mkdir("images")
     except:
