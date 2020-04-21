@@ -21,7 +21,7 @@ config = "config.txt"
 api = {}
 hybrid_apikey = "NOT READY"
 
-
+#initialise all the api keys and apis from config.txt
 def init():
     with open(config) as f:
         for line in f:
@@ -95,7 +95,6 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
 # only works for url, no ip support
 def virusTotal(url):
-    #api = "https://www.virustotal.com/vtapi/v2/url/report"
     params = {
         'apikey': api.get("vt_apikey"),
         'resource': url
@@ -112,7 +111,6 @@ def virusTotal(url):
     return rate
 
 def virusTotalFile(a_file):
-    #api = "https://www.virustotal.com/vtapi/v2/file/scan"
     files = {'file': (a_file.split('/')[-1], open(a_file, 'rb'))}
     params = {
         'apikey': api.get("vt_apikey"),
@@ -136,7 +134,6 @@ def virusTotalFile(a_file):
         return "N/A"
 
 def virusTotalHash(hash_value):
-    #api = "https://www.virustotal.com/vtapi/v2/file/report"
     params = {
         'apikey': api.get("vt_apikey"),
         'resource': hash_value
@@ -163,7 +160,6 @@ def virusTotalHash(hash_value):
 
 # only works for url, no ip support
 def abusedIP(ip):
-    #api = "https://api.abuseipdb.com/api/v2/check"
     headers = {
             'Key': api.get("abip_apikey"),
             'Accept': 'application/json',
@@ -177,7 +173,6 @@ def abusedIP(ip):
 
 # call to this function when url mode on
 def IBM_URL(url):
-    #api = "https://api.xforce.ibmcloud.com/url/"
     pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
     data = base64.b64encode(pass_data.encode())
     final = str(data.decode('utf-8'))
@@ -188,7 +183,6 @@ def IBM_URL(url):
 
 # call to this function when ip mode on
 def IBM_IP(ip):
-    #api = "https://api.xforce.ibmcloud.com/ipr/"
     pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
     data = base64.b64encode(pass_data.encode())
     final = str(data.decode('utf-8'))
@@ -213,7 +207,6 @@ def removeOldFGKey(get_key):
         fl.write(get_key + "\n")
 
 def fraudGuard(ip):
-    #api = "https://api.fraudguard.io/ip/" + ip
     fg_api = api.get("fg_api") + ip
     get_key = getFGKey()
     username = get_key.split(':')[0]
@@ -227,7 +220,6 @@ def fraudGuard(ip):
     return rate + " out of 5"
 
 def urlscan(url):
-    #api = "https://urlscan.io/api/v1/scan/"
     headers = {
         "API-Key": api.get("urlscan_apikey")
         }
@@ -252,7 +244,6 @@ def urlscan(url):
     return [str(score) + " out of 100", uuid]
 
 def googleSafe(url):
-    #api = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" + google_apikey
     headers = {
         "Content-Type": "application/json"
         }
@@ -264,7 +255,6 @@ def googleSafe(url):
         return "Safe"
 
 def auth0(ip):
-    #api = "https://signals.api.auth0.com/v2.0/ip/" + ip
     headers = {
         "Accept": "application/json",
         "X-Auth-Token":api.get("auth0_apikey")
@@ -273,16 +263,15 @@ def auth0(ip):
     return resp['fullip']['score']
 
 def hybrid(url):
-    api = "https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis"
     data = {
         'scan_type':'all',
         'url':url
         }
     headers = {
-        'api-key' : hybrid_apikey,
+        'api-key' : api.get("hybrid_apikey"),
         'user-agent':'Falcon Sandbox'
         }
-    resp = requests.post(api, data=data,headers=headers).json()
+    resp = requests.post(api.get("hybrid_api"), data=data,headers=headers).json()
     report_id = resp['sha256']
     resp2 = requests.get("https://www.hybrid-analysis.com/api/v2/report/{}/summary".format(report_id),headers=headers).json()
     with open("images_hybrid/" + report_id + ".png", "wb+") as img_sc:
