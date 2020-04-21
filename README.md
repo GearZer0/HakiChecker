@@ -3,22 +3,42 @@
 This tool check the reputation of IP addresses, Urls, Hashes or Files from multiple OSINT. Everything All-in-One!
 
 ##OSINT used
-####IP Address Reputation Check
+#####IP Address Reputation Check
 * IBM, AbusedIPDB, FraudGuard, Auth0
 
-####URL Reputation Check
+#####URL Reputation Check
 * Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
 
-For urlscan.io, whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
+    For urlscan.io, whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
 
-####Multiple file Scan
+#####Multiple file Scan
 * Virustotal
 
-Maximum 32MB per file. Upload multiple file to Virustotal. Put each directory of the file into .txt.
+    Maximum 32MB per file. Upload multiple file to Virustotal. Put each directory of the file into .txt.
 
-####Hash Reputation and Hash equivalent Hash Check
+#####Hash Reputation and Hash equivalent Hash Check
 * Virustotal
 
+##Safe or block?
+The logic to calculate if the url/ip to display "To block" at the **Action** column of the output 
+is "if anything that does not belong to their default score if no IOC is found", will be flagged 
+as "To block"
+
+Below are the Safe score (their default score if no IOC is found)
+```
+  URL
+    - IBM : 1 out of 10
+    - AbuseIPDB : 0 out of 100
+    - FraudGuard : 1 out of 5
+    - Auth0 : 0
+
+   IP
+    - Virustotal : 0 out of x
+    - IBM : 1 out of 10
+    - urlscan.io : 0 out of 100
+    - GoogleSafeBrowsing : Safe
+```
+Anything other than the above will be flagged as "To block"
 
 ## Requirements
 ####1. Installations
@@ -109,15 +129,28 @@ To run the script, there are a few commands available.
 -url list.txt		Choose url as Parameter 
 -hash list.txt		Choose hash as Parameter 
 -file list.txt		Choose file as Parameter
+-sip xx.xx.xx.xx	check single IP address
+-surl xxxxxx		check single url
+-shash xxxxxxxx		check single hash
 -d x			set delay between search
 ```
 These are some examples of the commands that can be types in cmd.
 ```
-python HakiChecker.py -ip list.txt 		check IP address with no delay
-python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
-python HakiChecker.py -url list.txt -d 2 	check url with 2 seconds delay (no screenshot mode)
-python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
-python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
+IP
+- python HakiChecker.py -ip list.txt 		check IP address with no delay
+- python HakiChecker.py -sip xx.xx.xx.xx	check single IP address
+
+URL
+- python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
+- python HakiChecker.py -url list.txt -d 15 	check url with 15 seconds delay (no screenshot mode)
+- python HakiChecker.py -surl xxx		check single url
+
+HASH
+- python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
+- python HakiChecker.py -shash xxxxxx		check single hash
+
+FILE
+- python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
 ```
 
 ###Known issue

@@ -19,6 +19,8 @@ result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_
 fraudGuardKeys = "fraudguard_keys.txt"
 config = "config.txt"
 api = {}
+hybrid_apikey = "NOT READY"
+
 
 def init():
     with open(config) as f:
@@ -32,19 +34,51 @@ def init():
 # function to save result in csv file
 def saveRecord(data, formula):
     if formula == "ip":
-        fieldnames = ["Target", "IBM", "AbusedIP", "FraudGuard", "Auth0"]
+        fieldnames = ["Target", "IBM", "AbusedIP", "FraudGuard", "Auth0", "Action"]
         with open(result_ip_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(result_ip_name).st_size == 0:
                 writer.writeheader()
-            writer.writerow({"Target":data[0], "IBM":data[1], "AbusedIP":data[2],"FraudGuard":data[3], "Auth0": data[4]})
+            malic = "Safe"
+            nonzero = 0
+            if data[1].startswith("1 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if data[2].startswith("0 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if data[3].startswith("1 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if int(data[4]) != 0:
+                #malic = "Malicious"
+                nonzero += 1
+            if nonzero > 0:
+                malic = "To Block"
+            writer.writerow({"Target":data[0], "IBM":data[1], "AbusedIP":data[2],"FraudGuard":data[3], "Auth0": data[4], "Action": malic})
     elif formula == "url":
-        fieldnames = ["Target", "IBM", "VirusTotal","URLScan","GoogleSafeBrowsing", "URLScanUUID"]
+        fieldnames = ["Target", "IBM", "VirusTotal","URLScan","GoogleSafeBrowsing", "URLScanUUID", "Action"]
         with open(result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(result_url_name).st_size == 0:
                 writer.writeheader()
-            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5]})
+            malic = "Safe"
+            nonzero = 0
+            if data[1].startswith("1 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if data[2].startswith("0 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if data[3].startswith("0 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if data[4].startswith("Safe") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if nonzero > 0:
+                malic = "To Block"
+            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5], "Action" : malic})
     elif formula == "file":
         fieldnames = ["Target", "VirusTotal"]
         with open(result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -206,7 +240,7 @@ def urlscan(url):
     if delay is not None:
         sleep(delay)
     else:
-        sleep(30)
+        sleep(60)
     result = requests.get(nextpage).json()
     score = result['verdicts']['overall']['score']
     sleep(2)
@@ -238,10 +272,32 @@ def auth0(ip):
     resp = requests.get(api.get("auth0_api") + ip,headers=headers).json()
     return resp['fullip']['score']
 
+def hybrid(url):
+    api = "https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis"
+    data = {
+        'scan_type':'all',
+        'url':url
+        }
+    headers = {
+        'api-key' : hybrid_apikey,
+        'user-agent':'Falcon Sandbox'
+        }
+    resp = requests.post(api, data=data,headers=headers).json()
+    report_id = resp['sha256']
+    resp2 = requests.get("https://www.hybrid-analysis.com/api/v2/report/{}/summary".format(report_id),headers=headers).json()
+    with open("images_hybrid/" + report_id + ".png", "wb+") as img_sc:
+        try:
+            img_sc.write(requests.get("https://www.hybrid-analysis.com/api/v2/report/" + report_id + "/screenshots",headers=headers).content)
+        except:
+            pass
+    return resp2['threat_level']
+
 if __name__ == "__main__":
     init()
+    #print(hybrid("https://chase.com.onlinesecuremyaccount.locked.situstaruhanqq820.com/"))
     try:
         os.mkdir("images")
+        os.mkdir("images_hybrid")
     except:
         pass
     #print(urlscan("https://en.wikipedia.org/wiki/Anime"))
@@ -251,6 +307,9 @@ if __name__ == "__main__":
     hash_mode = False
     delay = None
     file_to_read = None
+    sip_mode = False
+    surl_mode = False
+    shash_mode = False
     if len(sys.argv) < 3:
         print("Usage: " + sys.argv[0] + " -url list.txt")
         print("Usage: " + sys.argv[0] + " -ip list.txt")
@@ -260,6 +319,9 @@ if __name__ == "__main__":
         print("Usage: " + sys.argv[0] + " -hash list.txt -d 15")
         print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt")
         print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt -d 15")
+        print("Usage: " + sys.argv[0] + " -sip 127.0.0.1")
+        print("Usage: " + sys.argv[0] + " -surl URL")
+        print("Usage: " + sys.argv[0] + " -shash HASH")
     else:
         ok = False
         if len(sys.argv) == 5:
@@ -283,6 +345,12 @@ if __name__ == "__main__":
                 file_mode = True
             elif sys.argv[1] == "-hash":
                 hash_mode = True
+            elif sys.argv[1] == "-shash":
+                shash_mode = True
+            elif sys.argv[1] == "-sip":
+                sip_mode = True
+            elif sys.argv[1] == "-surl":
+                surl_mode = True
             file_to_read = sys.argv[2]
             ok = True
         else:
@@ -294,6 +362,60 @@ if __name__ == "__main__":
             print("Usage: " + sys.argv[0] + " -hash list.txt -d 15")
             print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt")
             print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt -d 15")
+        if sip_mode:
+            ok = False
+            try:
+                abip = abusedIP(file_to_read)
+            except:
+                abip = "N/A"
+            print("Abused IP: " + abip)
+            try:
+                fg = fraudGuard(file_to_read)
+            except:
+                fg = "N/A"
+            print("FraudGuard: " + fg)
+            try:
+                ibm_rec = IBM_IP(file_to_read)
+            except:
+                ibm_rec = "N/A"
+            print("IBM: " + ibm_rec)
+            try:
+                ath0 = auth0(file_to_read)
+            except:
+                ath0 = "N/A"
+            print("Auth0: " + str(ath0))
+        elif surl_mode:
+            ok = False
+            try:
+                vt = virusTotal(file_to_read)
+            except:
+                vt = "N/A"
+            print("VirusTotal: " + vt)
+            try:
+                ibm_rec = IBM_URL(file_to_read)
+            except:
+                ibm_rec = "N/A"
+            print("IBM: " + ibm_rec)
+            try:
+                usc = urlscan(file_to_read)
+                uscuuid = usc[1]
+                usc = usc[0]
+            except:
+                usc = "N/A"
+                uscuuid = "N/A"
+            print("URLscan: " + usc)
+            try:
+                gsb = googleSafe(file_to_read)
+            except:
+                gsb = "N/A"
+            print("GoogleSafeBrowsing: " + gsb)
+        elif shash_mode:
+            ok = False
+            hv = virusTotalHash(file_to_read)
+            print("md5: " + hv[1])
+            print("sha256: " + hv[2])
+            print("sha1: " + hv[3])
+            print("score: " + hv[4])
         if ok == True:
             file_data = open(file_to_read, 'r').read().split('\n')
             if ip_mode == True:
