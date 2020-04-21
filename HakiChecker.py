@@ -8,21 +8,28 @@ import csv
 from requests.auth import HTTPBasicAuth
 import sys
 import os
+from datetime import datetime
 
 # SOME CONFIG, related to input output file
-result_ip_name = "result_ip.csv" #save result for ip here
-result_url_name = "result_url.csv" #save result for url here
-result_file_name = "result_file.csv" #save result for files here
-result_hash_name = "result_hash.csv" #save result for hash here
+result_Dir = "Result/"  #Directory for results files
+input_Dir = "Input/"  #Directory for Input files
+result_ip_name = "result_ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for ip here
+result_url_name = "result_url_{}.csv" #save result for url here
+result_file_name = "result_file{}.csv" #save result for files here
+result_hash_name = "result_hash{}.csv" #save result for hash here
 fraudGuardKeys = "fraudguard_keys.txt"
 
 # API KEYS
-vt_apikey = "API KEY"
-abip_apikey = "API KEY"
-ibm_auth = 'APIKEY:APIPASSWORD'
-urlscan_apikey = "API KEY"
-google_apikey = "API KEY"
-auth0_apikey = "API KEY"
+api = {}
+
+def init():
+    with open("config.txt") as f:
+        for line in f:
+            print(line)
+            if line != "\n" and not line.startswith('['):
+                (key, val) = line.split("=", 1)
+                api[key.strip()] = val.strip()
+
 
 # function to save result in csv file
 def saveRecord(data, formula):
@@ -56,16 +63,16 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
 # only works for url, no ip support
 def virusTotal(url):
-    api = "https://www.virustotal.com/vtapi/v2/url/report"
+    #api = "https://www.virustotal.com/vtapi/v2/url/report"
     params = {
-        'apikey': vt_apikey,
+        'apikey': api.get("vt_apikey"),
         'resource': url
         }
     headers = {
             "Accept-Encoding": "gzip, deflate",
             "User-Agent": "gzip,  My Python requests library example client or username"
         }
-    resp = json.loads(requests.post(api, params=params, headers=headers).text)
+    resp = json.loads(requests.post(api.get("vt_url_api"), params=params, headers=headers).text)
     if resp['response_code'] == 1:
         rate = str(resp['positives']) + " out of " + str(resp['total'])
     else:
@@ -73,12 +80,12 @@ def virusTotal(url):
     return rate
 
 def virusTotalFile(a_file):
-    api = "https://www.virustotal.com/vtapi/v2/file/scan"
+    #api = "https://www.virustotal.com/vtapi/v2/file/scan"
     files = {'file': (a_file.split('/')[-1], open(a_file, 'rb'))}
     params = {
-        'apikey': vt_apikey,
+        'apikey': api.get("vt_apikey"),
         }
-    resp = requests.post(api, files=files, params=params)
+    resp = requests.post(api.get("vt_file_api"), files=files, params=params)
     if resp.status_code != 204:
         resp2 = json.loads(resp.text)['resource']
         if delay is not None:
@@ -86,24 +93,24 @@ def virusTotalFile(a_file):
         else:
             sleep(15)
         params = params = {
-        'apikey': vt_apikey,
+        'apikey': api.get("vt_apikey"),
         'resource': resp2
         }
         headers = {"Accept-Encoding": "gzip, deflate", }
-        resp3 = json.loads(requests.post("https://www.virustotal.com/vtapi/v2/file/report", params=params, headers=headers).text)
+        resp3 = json.loads(requests.post(api.get("vt_report_api"), params=params, headers=headers).text)
         rate = str(resp3['positives'])+' out of '+str(resp3['total'])
         return rate
     else:
         return "N/A"
 
 def virusTotalHash(hash_value):
-    api = "https://www.virustotal.com/vtapi/v2/file/report"
+    #api = "https://www.virustotal.com/vtapi/v2/file/report"
     params = {
-        'apikey': vt_apikey,
+        'apikey': api.get("vt_apikey"),
         'resource': hash_value
         }
     headers = {"Accept-Encoding": "gzip, deflate", }
-    resp = requests.get(api, params=params, headers=headers).json()
+    resp = requests.get(api.get("vt_hash_api"), params=params, headers=headers).json()
     try:
         md5 =resp['md5']
     except:
