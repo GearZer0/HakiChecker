@@ -29,5 +29,9 @@ google_apikey =
 google_api = https://safebrowsing.googleapis.com/v4/threatMatches:find?key=
 
 [Auth0]
-auth0_apikey =
+auth0_apikey = 
 auth0_api = https://signals.api.auth0.com/v2.0/ip/
+
+[Hybrid Analysis]
+hybrid_apikey =
+hybrid_api = https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis
