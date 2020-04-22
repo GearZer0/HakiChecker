@@ -58,7 +58,9 @@ def virusTotal3(url):
     elif resp.status_code == 429:
         raise Exception("Error! Requests Exceeded!")
     else:
-        rate = str("Error " + str(resp.status_code) + ": " + str(resp))
+        rate = "N/A"
+        #for debugging
+        #print("Error " + str(resp.status_code) + ": " + str(resp))
     return rate
 
 

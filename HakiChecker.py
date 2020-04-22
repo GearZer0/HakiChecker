@@ -94,19 +94,41 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
 # only works for url, no ip support
 def virusTotal(url):
-    params = {
-        'apikey': api.get("vt_apikey"),
-        'resource': url
-        }
     headers = {
-            "Accept-Encoding": "gzip, deflate",
-            "User-Agent": "gzip,  My Python requests library example client or username"
-        }
-    resp = json.loads(requests.post(api.get("vt_url_api"), params=params, headers=headers).text)
-    if resp['response_code'] == 1:
-        rate = str(resp['positives']) + " out of " + str(resp['total'])
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    # send url to scan
+    resp = requests.post(api.get("vt_url_api"), headers=headers, data={'url': url})
+
+    # fetch scan results
+    encoded_url = base64.b64encode(url.encode())
+    resp = requests.get(
+        api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
+        headers=headers)
+
+    if resp.status_code == 200:
+        # Check if the analysis is finished before returning the results
+        # if 'last_analysis_results' key-value pair is empty, then it is not finised
+        while not resp.json()['data']['attributes']['last_analysis_results']:
+            resp = resp.get(
+                api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
+                headers=headers)
+            sleep(3)
+        harmless = int(resp.json()['data']['attributes']['last_analysis_stats']['harmless'])
+        malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
+        suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+        timeout = int(resp.json()['data']['attributes']['last_analysis_stats']['timeout'])
+        undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
+        rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + timeout + undetected)
+    elif resp.status_code == 401:
+        raise Exception("Error! Please verify API KEY!")
+    elif resp.status_code == 429:
+        raise Exception("Error! Requests Exceeded!")
     else:
         rate = "N/A"
+        #for debugging
+        #print("Error " + str(resp.status_code) + ": " + str(resp))
     return rate
 
 def virusTotalFile(a_file):
@@ -449,6 +471,9 @@ if __name__ == "__main__":
                     print("IN USE: " + url)
                     try:
                         vt = virusTotal(url)
+                    except Exception as error:
+                        print(str(error))
+                        vt = "N/A"
                     except:
                         vt = "N/A"
                     print("VirusTotal: " + vt)
