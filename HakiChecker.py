@@ -25,7 +25,6 @@ hybrid_apikey = "NOT READY"
 def init():
     with open(config) as f:
         for line in f:
-            print(line)
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
@@ -313,6 +312,7 @@ if __name__ == "__main__":
         print("Usage: " + sys.argv[0] + " -shash HASH")
     else:
         ok = False
+        #with -d
         if len(sys.argv) == 5:
             if sys.argv[1] == "-url":
                 url_mode = True
@@ -325,6 +325,7 @@ if __name__ == "__main__":
             delay = int(sys.argv[4])
             file_to_read = sys.argv[2]
             ok = True
+        #without -d
         elif len(sys.argv) == 3:
             if sys.argv[1] == "-url":
                 url_mode = True
