@@ -180,41 +180,25 @@ def virusTotalFile(file):
 
     #retrieve analysis
     filehash = str(md5(file))
-    res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
+    return virusTotalHash(filehash)[4]
+
+def virusTotalHash(hash):
+    headers = {
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=headers)
     checkExceptionVT(res.status_code)
     harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
     malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
     suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
     undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    #Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-
-    return rate
-
-def virusTotalHash(hash_value):
-    params = {
-        'apikey': api.get("vt_apikey"),
-        'resource': hash_value
-        }
-    headers = {"Accept-Encoding": "gzip, deflate", }
-    resp = requests.get(api.get("vt_hash_api"), params=params, headers=headers).json()
-    try:
-        md5 =resp['md5']
-    except:
-        md5 = "N/A"
-    try:
-        sha256 =resp['sha256']
-    except:
-        sha256 = "N/A"
-    try:
-        sha1 =resp['sha1']
-    except:
-        sha1 = "N/A"
-    try:
-        score = str(resp['positives'])+' out of '+str(resp['total'])
-    except:
-        score = "N/A"
-    return [hash_value, md5, sha256, sha1, score]
+    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
+    md5 = res.json()['data']['attributes']['md5']
+    sha256 = res.json()['data']['attributes']['sha256']
+    sha1 = res.json()['data']['attributes']['sha1']
+    return [hash, md5, sha256, sha1, rate]
 
 # only works for url, no ip support
 def abusedIP(ip):

@@ -81,7 +81,7 @@ def virusTotalFile(file):
 
     #retrieve analysis
     filehash = str(md5(file))
-    return virusTotalHash3(filehash)
+    return virusTotalHash3(filehash)[4]
 
 def virusTotalHash3(hash):
     headers = {
@@ -96,21 +96,10 @@ def virusTotalHash3(hash):
     undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
     rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
     # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-    return rate
-
-def virusTotalIP(ip):
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    res = requests.get(api.get("vt_ip_api").format(ip), headers=headers)
-    checkExceptionVT(res.status_code)
-    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    return rate
+    md5 = res.json()['data']['attributes']['md5']
+    sha256 = res.json()['data']['attributes']['sha256']
+    sha1 = res.json()['data']['attributes']['sha1']
+    return [hash, md5, sha256, sha1, rate]
 
 if __name__ == "__main__":
     init()
@@ -122,7 +111,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + file)
         try:
-            vt = virusTotalIP(file)
+            vt = virusTotalFile(file)
         except Exception as error:
             print(str(error))
             vt = "N/A"
