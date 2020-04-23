@@ -68,23 +68,13 @@ def virusTotalFile3(file):
         filehash = str(md5(file))
         res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
         if res.status_code == 200:
-            rate = str(res.json()['data']['attributes'][''])
             harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
             malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
             suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-            #timeout = int(res.json()['data']['attributes']['last_analysis_stats']['timeout'])
             undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
             rate = str(malicious + suspicious) + " out of " + str(
                 malicious + harmless + suspicious + undetected)
-
-            #"confirmed-timeout"
-            # "failure"
-            # "harmless"
-            # "malicious"
-            # "suspicious"
-            # "timeout"
-            # "type-unsupported"
-            # "undetected"
+            #Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
         elif res.status_code == 429:
             raise Exception("Error! Requests Exceeded!")
         else:

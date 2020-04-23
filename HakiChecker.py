@@ -1,4 +1,6 @@
 # -*- coding: utf8 -*-
+import hashlib
+
 import requests
 import json
 import base64
@@ -115,44 +117,65 @@ def virusTotal(url):
                 api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
                 headers=headers)
             sleep(3)
+        #available status: harmless, malicious, suspicious, timeout, undetected
         harmless = int(resp.json()['data']['attributes']['last_analysis_stats']['harmless'])
         malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
         suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-        timeout = int(resp.json()['data']['attributes']['last_analysis_stats']['timeout'])
         undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
-        rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + timeout + undetected)
+        rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
     elif resp.status_code == 401:
         raise Exception("Error! Please verify API KEY!")
     elif resp.status_code == 429:
         raise Exception("Error! Requests Exceeded!")
     else:
         rate = "N/A"
-        #for debugging
-        #print("Error " + str(resp.status_code) + ": " + str(resp))
     return rate
 
-def virusTotalFile(a_file):
-    files = {'file': (a_file.split('/')[-1], open(a_file, 'rb'))}
-    params = {
-        'apikey': api.get("vt_apikey"),
-        }
-    resp = requests.post(api.get("vt_file_api"), files=files, params=params)
-    if resp.status_code != 204:
-        resp2 = json.loads(resp.text)['resource']
-        if delay is not None:
-            sleep(delay)
+#Get MD5 hash
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def virusTotalFile(file):
+    if not os.path.isfile(file):
+        raise Exception('File not found. Please submit a valid file path')
+    headers = {
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    with open(file, 'rb') as f:
+        data = {'file': f.read()}
+    file_size = os.path.getsize(file)
+    if file_size < 33554432:
+        res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
+        if res.status_code == 401:
+            raise Exception("Error! Please verify API KEY!")
+        elif res.status_code == 429:
+            raise Exception("Error! Requests Exceeded!")
+        elif res.status_code != 200:
+            raise Exception("")
+        filehash = str(md5(file))
+        res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
+        if res.status_code == 200:
+            harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+            malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+            suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+            undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+            rate = str(malicious + suspicious) + " out of " + str(
+                malicious + harmless + suspicious + undetected)
+            # Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
+        elif res.status_code == 429:
+            raise Exception("Error! Requests Exceeded!")
         else:
-            sleep(15)
-        params = params = {
-        'apikey': api.get("vt_apikey"),
-        'resource': resp2
-        }
-        headers = {"Accept-Encoding": "gzip, deflate", }
-        resp3 = json.loads(requests.post(api.get("vt_report_api"), params=params, headers=headers).text)
-        rate = str(resp3['positives'])+' out of '+str(resp3['total'])
-        return rate
+            print(res.status_code)
+            rate = "N/A"
     else:
-        return "N/A"
+        raise Exception('File size is bigger than 32MB!')
+
+    return rate
 
 def virusTotalHash(hash_value):
     params = {
@@ -509,10 +532,12 @@ if __name__ == "__main__":
                 for a_file in file_data:
                     if a_file == "":
                         continue
+                    print("IN USE: " + a_file)
                     try:
                         res = virusTotalFile(a_file)
                     except:
                         res = "N/A"
+                    print("VirusTotal: " + str(res))
                     dataset = []
                     dataset.append(a_file)
                     dataset.append(res)
