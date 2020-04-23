@@ -146,7 +146,7 @@ URL
 - python HakiChecker.py -surl xxx		check single url
 
 HASH
-- python HakiChecker.py -hash list.txt 		check hash or equivalent Hash
+- python HakiChecker.py -hash list.txt -d 15	check hash or equivalent Hash
 - python HakiChecker.py -shash xxxxxx		check single hash
 
 FILE
