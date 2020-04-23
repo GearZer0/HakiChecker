@@ -56,7 +56,7 @@ def saveRecord(data, formula):
             if data[4].startswith("1 out") == False and data[4] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if int(data[5]) != 0 and data[5] != "N/A":
+            if data[5] != "0" and data[5] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
@@ -283,7 +283,7 @@ def auth0(ip):
         "X-Auth-Token":api.get("auth0_apikey")
         }
     resp = requests.get(api.get("auth0_api") + ip,headers=headers).json()
-    return resp['fullip']['score']
+    return str(resp['fullip']['score']).strip()
 
 def hybrid(url):
     data = {
