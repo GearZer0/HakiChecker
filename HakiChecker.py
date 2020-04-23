@@ -44,19 +44,19 @@ def saveRecord(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if data[1].startswith("1 out") == False:
+            if data[1].startswith("1 out") == False and data[1] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[2].startswith("0 out") == False:
+            if data[2].startswith("0 out") == False and data[2] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("0 out") == False:
+            if data[3].startswith("0 out") == False and data[3] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[4].startswith("1 out") == False:
+            if data[4].startswith("1 out") == False and data[4] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if int(data[5]) != 0:
+            if int(data[5]) != 0 and data[5] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
@@ -71,16 +71,16 @@ def saveRecord(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if data[1].startswith("1 out") == False:
+            if data[1].startswith("1 out") == False and data[1] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[2].startswith("0 out") == False:
+            if data[2].startswith("0 out") == False and data[2] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("0 out") == False:
+            if data[3].startswith("0 out") == False and data[3] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
-            if data[4].startswith("Safe") == False:
+            if data[4].startswith("Safe") == False and data[4] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
