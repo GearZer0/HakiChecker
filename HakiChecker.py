@@ -22,7 +22,7 @@ fraudGuardKeys = "fraudguard_keys.txt"
 config = "config.txt"
 api = {}
 hybrid_apikey = "NOT READY"
-
+vt_headers = {}
 #initialise all the api keys and apis from config.txt
 def init():
     with open(config) as f:
@@ -30,7 +30,9 @@ def init():
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
-
+    #Initialise vt_header
+    vt_headers['x-apikey'] = api.get("vt_apikey")
+    vt_headers['Accept'] = 'application/json'
 
 # function to save result in csv file
 def saveRecord(data, formula):
@@ -99,47 +101,12 @@ def saveRecord(data, formula):
                 writer.writeheader()
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
 
-def virusTotalIP(ip):
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    res = requests.get(api.get("vt_ip_api").format(ip), headers=headers)
-    checkExceptionVT(res.status_code)
+def getResultVT(res):
     harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
     malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
     suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
     undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
     rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    return rate
-
-def virusTotalURL(url):
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    # send url to scan
-    resp = requests.post(api.get("vt_url_api"), headers=headers, data={'url': url})
-    # fetch scan results
-    encoded_url = base64.b64encode(url.encode())
-    resp = requests.get(
-        api.get("vt_url_api").format(encoded_url.decode().replace('=', '')),
-        headers=headers)
-    checkExceptionVT(resp.status_code)
-    # Check if the analysis is finished before returning the results
-    # if 'last_analysis_results' key-value pair is empty, then it is not finised
-    while not resp.json()['data']['attributes']['last_analysis_results']:
-        resp = resp.get(
-            api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
-            headers=headers)
-        sleep(3)
-    #available status: harmless, malicious, suspicious, timeout, undetected
-    harmless = int(resp.json()['data']['attributes']['last_analysis_stats']['harmless'])
-    malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
-    suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-    undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-
     return rate
 
 #Get MD5 hash
@@ -157,25 +124,47 @@ def checkExceptionVT(code):
         raise Exception("ERROR: Requests Exceeded!")
     elif code != 200:
         raise Exception("")
+
+def virusTotalIP(ip):
+    res = requests.get(api.get("vt_ip_api").format(ip), headers=vt_headers)
+    checkExceptionVT(res.status_code)
+    # available status: harmless, malicious, suspicious, timeout, undetected
+    return getResultVT(res)
+
+def virusTotalURL(url):
+    # send url to scan
+    resp = requests.post(api.get("vt_url_api"), headers=vt_headers, data={'url': url})
+    # fetch scan results
+    encoded_url = base64.b64encode(url.encode())
+    resp = requests.get(
+        api.get("vt_url_api").format(encoded_url.decode().replace('=', '')),
+        headers=vt_headers)
+    checkExceptionVT(resp.status_code)
+    # Check if the analysis is finished before returning the results
+    # if 'last_analysis_results' key-value pair is empty, then it is not finised
+    while not resp.json()['data']['attributes']['last_analysis_results']:
+        resp = resp.get(
+            api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
+            headers=vt_headers)
+        sleep(3)
+    #available status: harmless, malicious, suspicious, timeout, undetected
+    return getResultVT(resp)
+
 def virusTotalFile(file):
     if not os.path.isfile(file):
         raise Exception('File not found. Please submit a valid file path')
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
     with open(file, 'rb') as f:
         data = {'file': f.read()}
 
     #upload file based on size
     file_size = os.path.getsize(file)
     if file_size <= 33554432:
-        res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
+        res = requests.post(api.get("vt_file_api"), headers=vt_headers, files=data)
     else:  # bigger than 32 mb - there may be performance issue as a file gets too big
-        res = requests.get(api.get("vt_file_api") + '/upload_url', headers=headers)
+        res = requests.get(api.get("vt_file_api") + '/upload_url', headers=vt_headers)
         checkExceptionVT(res.status_code)
         upload_url = res.json()['data']
-        res = requests.post(upload_url, headers=headers, files=data)
+        res = requests.post(upload_url, headers=vt_headers, files=data)
     checkExceptionVT(res.status_code)
 
     #retrieve analysis
@@ -183,17 +172,9 @@ def virusTotalFile(file):
     return virusTotalHash(filehash)[4]
 
 def virusTotalHash(hash):
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=headers)
+    res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=vt_headers)
     checkExceptionVT(res.status_code)
-    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    rate = getResultVT(res)
     # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
     md5 = res.json()['data']['attributes']['md5']
     sha256 = res.json()['data']['attributes']['sha256']
@@ -209,7 +190,7 @@ def abusedIP(ip):
     params = {
             'ipAddress': ip,
         }
-    resp = json.loads(requests.get(api.get("abip_apikey"), headers=headers,params=params).text)
+    resp = json.loads(requests.get(api.get("abip_apikey"), headers=headers, params=params).text)
     rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
     return rate
 
@@ -559,19 +540,25 @@ if __name__ == "__main__":
                     dataset = []
                     dataset.append(a_file)
                     dataset.append(res)
-                    saveRecord(dataset,"file")
+                    saveRecord(dataset, "file")
                     if delay is not None:
                         sleep(delay)
             elif hash_mode == True:
                 for a_hash in file_data:
                     if a_hash == "":
                         continue
+                    print(a_hash)
                     try:
-                        hv = virusTotalHash(a_hash)
-                        saveRecord(hv, "hash")
-                        print("Data saved for " + a_hash)
+                        res = virusTotalHash(a_hash)
+                        saveRecord(res, "hash")
+                        print("VirusTotal: " + str(res[4]))
+                    except Exception as error:
+                        print(str(error))
+                        print("VirusTotal: N/A")
+                        res = []
                     except:
-                        hv = []
-                        print("No data saved for " + a_hash)
+                        res = []
+                        print("VirusTotal: N/A")
+
                     if delay is not None:
                         sleep(delay)
