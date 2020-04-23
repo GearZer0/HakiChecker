@@ -100,7 +100,7 @@ Score Definition:
 
 ##### [Virustotal:](https://www.virustotal.com/gui/home)
 Virus Total is one of the most comprehensive OSINT. It can check for IPs, URLs, Hashes and files. Public API supports 
-**4 requests per minute**. Set at least 15 seconds of delay `-d 15` and at least 60 seconds of delay for file upload.
+**4 requests per minute**.
 1. Login to Virustotal and get API KEY 
 2. Open up `config.txt` and under `[Virus Total]`, append API KEY after `vt_apikey = `
 
@@ -142,7 +142,7 @@ IP
 
 URL
 - python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
-- python HakiChecker.py -url list.txt -d 15 	check url with 15 seconds delay (no screenshot mode)
+- python HakiChecker.py -url list.txt    	check url (no screenshot mode)
 - python HakiChecker.py -surl xxx		check single url
 
 HASH
@@ -150,13 +150,12 @@ HASH
 - python HakiChecker.py -shash xxxxxx		check single hash
 
 FILE
-- python HakiChecker.py -file list.txt -d 60      check file with 60 seconds delay
+- python HakiChecker.py -file list.txt      check file
 ```
 
 ### Known issue
 - IBM returns N/A if url is too long. This is IBM API issue.
 - urlscan.io returns N/A if the delay is not long enough (Please put at least 30 seconds delay i.e -d 30)
-- Virustotal file upload returns N/A if the delay is not long enough (Please put at least 60 seconds delay i.e -d 60)
 - Virustotal file upload returns N/A despite the delay is long enough at first upload, 
   sometimes it takes more time for the server to process your file
 
