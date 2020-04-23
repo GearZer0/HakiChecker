@@ -157,7 +157,6 @@ def checkExceptionVT(code):
         raise Exception("ERROR: Requests Exceeded!")
     elif code != 200:
         raise Exception("")
-
 def virusTotalFile(file):
     if not os.path.isfile(file):
         raise Exception('File not found. Please submit a valid file path')
@@ -414,6 +413,14 @@ if __name__ == "__main__":
             print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt -d 15")
         if sip_mode:
             ok = False
+            try:
+                vt = virusTotalIP(file_to_read)
+            except Exception as error:
+                print(str(error))
+                vt = "N/A"
+            except:
+                vt = "N/A"
+            print("VirusTotal: " + vt)
             try:
                 abip = abusedIP(file_to_read)
             except:
