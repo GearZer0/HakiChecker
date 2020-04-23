@@ -35,7 +35,7 @@ def init():
 # function to save result in csv file
 def saveRecord(data, formula):
     if formula == "ip":
-        fieldnames = ["Target", "IBM", "AbusedIP", "FraudGuard", "Auth0", "Action"]
+        fieldnames = ["Target", "IBM", "VirusTotal", "AbusedIP", "FraudGuard", "Auth0", "Action"]
         with open(result_ip_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(result_ip_name).st_size == 0:
@@ -48,17 +48,21 @@ def saveRecord(data, formula):
             if data[2].startswith("0 out") == False:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("1 out") == False:
+            if data[3].startswith("0 out") == False:
                 #malic = "Malicious"
                 nonzero += 1
-            if int(data[4]) != 0:
+            if data[4].startswith("1 out") == False:
+                #malic = "Malicious"
+                nonzero += 1
+            if int(data[5]) != 0:
                 #malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
                 malic = "To Block"
-            writer.writerow({"Target":data[0], "IBM":data[1], "AbusedIP":data[2],"FraudGuard":data[3], "Auth0": data[4], "Action": malic})
+            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "AbusedIP":data[3],
+                             "FraudGuard":data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
-        fieldnames = ["Target", "IBM", "VirusTotal","URLScan","GoogleSafeBrowsing", "URLScanUUID", "Action"]
+        fieldnames = ["Target", "IBM", "VirusTotal", "URLScan", "GoogleSafeBrowsing", "URLScanUUID", "Action"]
         with open(result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(result_url_name).st_size == 0:
@@ -94,8 +98,22 @@ def saveRecord(data, formula):
             if os.stat(result_hash_name).st_size == 0:
                 writer.writeheader()
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
-# only works for url, no ip support
-def virusTotal(url):
+
+def virusTotalIP(ip):
+    headers = {
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    res = requests.get(api.get("vt_ip_api").format(ip), headers=headers)
+    checkExceptionVT(res.status_code)
+    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    return rate
+
+def virusTotalURL(url):
     headers = {
         'x-apikey': api.get("vt_apikey"),
         'Accept': 'application/json'
@@ -419,7 +437,7 @@ if __name__ == "__main__":
         elif surl_mode:
             ok = False
             try:
-                vt = virusTotal(file_to_read)
+                vt = virusTotalURL(file_to_read)
             except:
                 vt = "N/A"
             print("VirusTotal: " + vt)
@@ -456,6 +474,14 @@ if __name__ == "__main__":
                         continue
                     print("IN USE: " + ip)
                     try:
+                        vt = virusTotalIP(ip)
+                    except Exception as error:
+                        print(str(error))
+                        vt = "N/A"
+                    except:
+                        vt = "N/A"
+                    print("VirusTotal: " + vt)
+                    try:
                         abip = abusedIP(ip)
                     except:
                         abip = "N/A"
@@ -478,6 +504,7 @@ if __name__ == "__main__":
                     dataset = []
                     dataset.append(ip)
                     dataset.append(ibm_rec)
+                    dataset.append(vt)
                     dataset.append(abip)
                     dataset.append(fg)
                     dataset.append(ath0)
@@ -490,7 +517,7 @@ if __name__ == "__main__":
                         continue
                     print(url)
                     try:
-                        vt = virusTotal(url)
+                        vt = virusTotalURL(url)
                     except Exception as error:
                         print(str(error))
                         vt = "N/A"

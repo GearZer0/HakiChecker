@@ -89,7 +89,6 @@ def virusTotalHash3(hash):
         'Accept': 'application/json'
     }
     res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=headers)
-    print(res.json())
     checkExceptionVT(res.status_code)
     harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
     malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
@@ -99,7 +98,19 @@ def virusTotalHash3(hash):
     # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
     return rate
 
-
+def virusTotalIP(ip):
+    headers = {
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    res = requests.get(api.get("vt_ip_api").format(ip), headers=headers)
+    checkExceptionVT(res.status_code)
+    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    return rate
 
 if __name__ == "__main__":
     init()
@@ -111,7 +122,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + file)
         try:
-            vt = virusTotalHash3(file)
+            vt = virusTotalIP(file)
         except Exception as error:
             print(str(error))
             vt = "N/A"
