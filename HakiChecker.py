@@ -120,7 +120,7 @@ def virusTotal(url):
     malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
     suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
     undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
 
     return rate
 
@@ -169,7 +169,7 @@ def virusTotalFile(file):
     malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
     suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
     undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
     #Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
 
     return rate
