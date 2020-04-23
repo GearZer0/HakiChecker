@@ -56,35 +56,38 @@ def virusTotalFile3(file):
     }
     with open(file, 'rb') as f:
         data = {'file': f.read()}
-    file_size = os.path.getsize(file)
-    if file_size < 33554432:
-        res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
-        if res.status_code == 401:
-            raise Exception("Error! Please verify API KEY!")
-        elif res.status_code == 429:
-            raise Exception("Error! Requests Exceeded!")
-        elif res.status_code != 200:
-            raise Exception("")
-        filehash = str(md5(file))
-        res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
-        if res.status_code == 200:
-            harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-            malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-            suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-            undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-            rate = str(malicious + suspicious) + " out of " + str(
-                malicious + harmless + suspicious + undetected)
-            #Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-        elif res.status_code == 429:
-            raise Exception("Error! Requests Exceeded!")
-        else:
-            print(res.status_code)
-            rate = "N/A"
-            # for debugging
-            # print("Error " + str(resp.status_code) + ": " + str(resp))
-    else:
-        raise Exception('File size is bigger than 32MB!')
 
+    #upload file based on size
+    file_size = os.path.getsize(file)
+    if file_size <= 33554432:
+        res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
+    else:  # bigger than 32 mb - there may be performance issue as a file gets too big
+        res = requests.post(api.get("vt_file_api") + '/upload_url', headers=headers, files=data)
+
+    #error catching
+    if res.status_code == 401:
+        raise Exception("Error! Please verify API KEY!")
+    elif res.status_code == 429:
+        raise Exception("Error! Requests Exceeded!")
+    elif res.status_code != 200:
+        raise Exception("")
+
+    #retrieve analysis
+    filehash = str(md5(file))
+    res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
+    if res.status_code == 200:
+        harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+        malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+        suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+        undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+        rate = str(malicious + suspicious) + " out of " + str(
+            malicious + harmless + suspicious + undetected)
+        #Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
+    elif res.status_code == 429:
+        raise Exception("Error! Requests Exceeded!")
+    else:
+        print(res.status_code)
+        rate = "N/A"
     return rate
 
 

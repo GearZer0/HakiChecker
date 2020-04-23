@@ -102,33 +102,26 @@ def virusTotal(url):
     }
     # send url to scan
     resp = requests.post(api.get("vt_url_api"), headers=headers, data={'url': url})
-
     # fetch scan results
     encoded_url = base64.b64encode(url.encode())
     resp = requests.get(
         api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
         headers=headers)
+    checkExceptionVT(resp.status_code)
+    # Check if the analysis is finished before returning the results
+    # if 'last_analysis_results' key-value pair is empty, then it is not finised
+    while not resp.json()['data']['attributes']['last_analysis_results']:
+        resp = resp.get(
+            api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
+            headers=headers)
+        sleep(3)
+    #available status: harmless, malicious, suspicious, timeout, undetected
+    harmless = int(resp.json()['data']['attributes']['last_analysis_stats']['harmless'])
+    malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
+    suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+    undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
+    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
 
-    if resp.status_code == 200:
-        # Check if the analysis is finished before returning the results
-        # if 'last_analysis_results' key-value pair is empty, then it is not finised
-        while not resp.json()['data']['attributes']['last_analysis_results']:
-            resp = resp.get(
-                api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
-                headers=headers)
-            sleep(3)
-        #available status: harmless, malicious, suspicious, timeout, undetected
-        harmless = int(resp.json()['data']['attributes']['last_analysis_stats']['harmless'])
-        malicious = int(resp.json()['data']['attributes']['last_analysis_stats']['malicious'])
-        suspicious = int(resp.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-        undetected = int(resp.json()['data']['attributes']['last_analysis_stats']['undetected'])
-        rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    elif resp.status_code == 401:
-        raise Exception("Error! Please verify API KEY!")
-    elif resp.status_code == 429:
-        raise Exception("Error! Requests Exceeded!")
-    else:
-        rate = "N/A"
     return rate
 
 #Get MD5 hash
@@ -139,6 +132,14 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+def checkExceptionVT(code):
+    if code == 401:
+        raise Exception("ERROR: Please verify API KEY!")
+    elif code == 429:
+        raise Exception("ERROR: Requests Exceeded!")
+    elif code != 200:
+        raise Exception("")
+
 def virusTotalFile(file):
     if not os.path.isfile(file):
         raise Exception('File not found. Please submit a valid file path')
@@ -148,32 +149,28 @@ def virusTotalFile(file):
     }
     with open(file, 'rb') as f:
         data = {'file': f.read()}
+
+    #upload file based on size
     file_size = os.path.getsize(file)
-    if file_size < 33554432:
+    if file_size <= 33554432:
         res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
-        if res.status_code == 401:
-            raise Exception("Error! Please verify API KEY!")
-        elif res.status_code == 429:
-            raise Exception("Error! Requests Exceeded!")
-        elif res.status_code != 200:
-            raise Exception("")
-        filehash = str(md5(file))
-        res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
-        if res.status_code == 200:
-            harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-            malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-            suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-            undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-            rate = str(malicious + suspicious) + " out of " + str(
-                malicious + harmless + suspicious + undetected)
-            # Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-        elif res.status_code == 429:
-            raise Exception("Error! Requests Exceeded!")
-        else:
-            print(res.status_code)
-            rate = "N/A"
-    else:
-        raise Exception('File size is bigger than 32MB!')
+    else:  # bigger than 32 mb - there may be performance issue as a file gets too big
+        res = requests.get(api.get("vt_file_api") + '/upload_url', headers=headers)
+        checkExceptionVT(res.status_code)
+        upload_url = res.json()['data']
+        res = requests.post(upload_url, headers=headers, files=data)
+    checkExceptionVT(res.status_code)
+
+    #retrieve analysis
+    filehash = str(md5(file))
+    res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
+    checkExceptionVT(res.status_code)
+    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    #Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
 
     return rate
 
@@ -491,7 +488,7 @@ if __name__ == "__main__":
                 for url in file_data:
                     if url == "":
                         continue
-                    print("IN USE: " + url)
+                    print(url)
                     try:
                         vt = virusTotal(url)
                     except Exception as error:
@@ -532,9 +529,12 @@ if __name__ == "__main__":
                 for a_file in file_data:
                     if a_file == "":
                         continue
-                    print("IN USE: " + a_file)
+                    print(a_file)
                     try:
                         res = virusTotalFile(a_file)
+                    except Exception as error:
+                        print(str(error))
+                        res = "N/A"
                     except:
                         res = "N/A"
                     print("VirusTotal: " + str(res))
