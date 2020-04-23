@@ -24,30 +24,41 @@ def init():
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
 
-def virusTotalFile(a_file):
-    files = {'file': (a_file.split('/')[-1], open(a_file, 'rb'))}
+def virusTotalHash(hash_value):
     params = {
         'apikey': api.get("vt_apikey"),
+        'resource': hash_value
         }
-    resp = requests.post(api.get("vt_file_api_old"), files=files, params=params)
-    if resp.status_code != 204:
-        resp2 = json.loads(resp.text)['resource']
-        if delay is not None:
-            sleep(delay)
-        else:
-            sleep(15)
-        params = params = {
-        'apikey': api.get("vt_apikey"),
-        'resource': resp2
-        }
-        headers = {"Accept-Encoding": "gzip, deflate", }
-        resp3 = json.loads(requests.post(api.get("vt_report_api"), params=params, headers=headers).text)
-        rate = str(resp3['positives'])+' out of '+str(resp3['total'])
-        return rate
-    else:
-        return "N/A"
+    headers = {"Accept-Encoding": "gzip, deflate", }
+    resp = requests.get(api.get("vt_hash_api"), params=params, headers=headers).json()
+    try:
+        md5 =resp['md5']
+    except:
+        md5 = "N/A"
+    try:
+        sha256 =resp['sha256']
+    except:
+        sha256 = "N/A"
+    try:
+        sha1 =resp['sha1']
+    except:
+        sha1 = "N/A"
+    try:
+        score = str(resp['positives'])+' out of '+str(resp['total'])
+    except:
+        score = "N/A"
+    return [hash_value, md5, sha256, sha1, score]
 
-def virusTotalFile3(file):
+
+def checkExceptionVT(code):
+    if code == 401:
+        raise Exception("ERROR: Please verify API KEY!")
+    elif code == 429:
+        raise Exception("ERROR: Requests Exceeded!")
+    elif code != 200:
+        raise Exception("")
+
+def virusTotalFile(file):
     if not os.path.isfile(file):
         raise Exception('File not found. Please submit a valid file path')
     headers = {
@@ -62,34 +73,31 @@ def virusTotalFile3(file):
     if file_size <= 33554432:
         res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
     else:  # bigger than 32 mb - there may be performance issue as a file gets too big
-        res = requests.post(api.get("vt_file_api") + '/upload_url', headers=headers, files=data)
-
-    #error catching
-    if res.status_code == 401:
-        raise Exception("Error! Please verify API KEY!")
-    elif res.status_code == 429:
-        raise Exception("Error! Requests Exceeded!")
-    elif res.status_code != 200:
-        raise Exception("")
+        res = requests.get(api.get("vt_file_api") + '/upload_url', headers=headers)
+        checkExceptionVT(res.status_code)
+        upload_url = res.json()['data']
+        res = requests.post(upload_url, headers=headers, files=data)
+    checkExceptionVT(res.status_code)
 
     #retrieve analysis
     filehash = str(md5(file))
-    res = requests.get(api.get("vt_file_api") + '/{}'.format(filehash), headers=headers)
-    if res.status_code == 200:
-        harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-        malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-        suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-        undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-        rate = str(malicious + suspicious) + " out of " + str(
-            malicious + harmless + suspicious + undetected)
-        #Status available: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-    elif res.status_code == 429:
-        raise Exception("Error! Requests Exceeded!")
-    else:
-        print(res.status_code)
-        rate = "N/A"
-    return rate
+    return virusTotalHash3(filehash)
 
+def virusTotalHash3(hash):
+    headers = {
+        'x-apikey': api.get("vt_apikey"),
+        'Accept': 'application/json'
+    }
+    res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=headers)
+    print(res.json())
+    checkExceptionVT(res.status_code)
+    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
+    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
+    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
+    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
+    return rate
 
 
 
@@ -103,11 +111,8 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + file)
         try:
-            vt = virusTotalFile3(file)
-        except requests.exceptions.RequestException as error:
-            print(str(error))
-            vt = "N/A"
+            vt = virusTotalHash3(file)
         except Exception as error:
             print(str(error))
             vt = "N/A"
-        print("VirusTotal: " + vt)
+        print("VirusTotal: " + str(vt))
