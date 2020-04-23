@@ -1,9 +1,9 @@
 [Virus Total]
 vt_apikey =
-vt_url_api = https://www.virustotal.com/api/v3/urls/
+vt_url_api = https://www.virustotal.com/api/v3/urls/{}
 vt_file_api = https://www.virustotal.com/api/v3/files
 vt_hash_api = https://www.virustotal.com/vtapi/v2/file/report
-vt_report_api = https://www.virustotal.com/vtapi/v2/file/report
+vt_ip_api = https://www.virustotal.com/api/v3/ip_addresses/{}
 
 [AbuseIPDB]
 abip_apikey =

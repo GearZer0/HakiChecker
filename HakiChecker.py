@@ -105,7 +105,7 @@ def virusTotal(url):
     # fetch scan results
     encoded_url = base64.b64encode(url.encode())
     resp = requests.get(
-        api.get("vt_url_api") + '{}'.format(encoded_url.decode().replace('=', '')),
+        api.get("vt_url_api").format(encoded_url.decode().replace('=', '')),
         headers=headers)
     checkExceptionVT(resp.status_code)
     # Check if the analysis is finished before returning the results
