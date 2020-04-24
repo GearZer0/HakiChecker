@@ -14,8 +14,8 @@ This tool check the reputation of IP addresses, Urls, Hashes or Files from multi
 ##### Multiple file Scan
 * Virustotal
 
-    File can be of any size. Any file larger than 32 MB will take a longer time and anything that goes over 200 MB may 
-    affct the performance.
+    File can be of any size. Any file larger than 32 MB will take a longer time (around a few minutes) and anything that goes over 200 MB may 
+    affect the performance.
     
 ##### Hash Reputation and Hash equivalent Hash Check
 * Virustotal
@@ -29,14 +29,14 @@ as "To block"
 
 Below are the Safe score (their default score if no IOC is found)
 ```
-  URL
+  IP
     - IBM : 1 out of 10
     - Virustotal: 0 out of x
     - AbuseIPDB : 0 out of 100
     - FraudGuard : 1 out of 5
     - Auth0 : 0
 
-   IP
+   URL
     - Virustotal : 0 out of x
     - IBM : 1 out of 10
     - urlscan.io : 0 out of 100
@@ -109,7 +109,7 @@ Virus Total is one of the most comprehensive OSINT. It can check for IPs, URLs, 
 2. Open up `config.txt` and under `[Virus Total]`, append API KEY after `vt_apikey = `
 
 ##### [urlscan.io:](https://urlscan.io/)
-URLscan.io can check for URLs and take screenshots. As it takes time to process, set delay to atleast 60 seconds.
+URLscan.io can check for URLs and take screenshots. It generally takes a long time is only enabled for screenshot mode.
 1. Login to urlscan.io and get API KEY 
 2. Open up `config.txt` and under `[URLscan]`, append API KEY after `urlscan_apikey = `
 	
@@ -136,7 +136,7 @@ To run the script, there are a few commands available.
 -sip xx.xx.xx.xx	check single IP address
 -surl xxxxxx		check single url
 -shash xxxxxxxx		check single hash
--d x			set delay between search
+-ss                 sceenshot mode
 ```
 These are some examples of the commands that can be types in cmd.
 ```
@@ -145,9 +145,8 @@ IP
 - python HakiChecker.py -sip xx.xx.xx.xx	check single IP address
 
 URL
-- python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
-- python HakiChecker.py -url list.txt  -d 15  	check url (no screenshot mode)
-- python HakiChecker.py -surl xxx		check single url
+- python HakiChecker.py -url list.txt  	    check url
+- python HakiChecker.py -surl xxx		    check single url
 
 HASH
 - python HakiChecker.py -hash list.txt   	check hash or equivalent Hash
@@ -159,7 +158,6 @@ FILE
 
 ### Known issue
 - IBM returns N/A if url is too long. This is IBM API issue.
-- urlscan.io returns N/A if the delay is not long enough (Please put at least 30 seconds delay i.e -d 30)
 - Virustotal file upload returns N/A despite the delay is long enough at first upload, 
   sometimes it takes more time for the server to process your file
 
