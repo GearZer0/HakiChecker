@@ -284,14 +284,26 @@ def urlscan(url):
             pass
     return [str(score) + " out of 100", uuid]
 
+def checkExceptionGS(code):
+    if code == 403:
+        raise Exception("ERROR: Please verify API KEY!")
+    elif code == 429:
+        raise Exception("ERROR: Requests Exceeded!")
+    elif code != 200:
+        raise Exception("")
+
 def googleSafe(url):
-    headers = {
-        "Content-Type": "application/json"
-        }
-    data = {"client":{"clientId":"mitreautoz","clientVersion":"1.5.2"},"threatInfo":{"threatTypes":["MALWARE", "SOCIAL_ENGINEERING"],"platformTypes":["WINDOWS"],"threatEntryTypes":["URL"],"threatEntries":[{"url": url}]}}
-    resp = requests.post(api.get("google_api")+api.get("google_apikey"),data=json.dumps(data)).json()
-    if "matches" in resp.keys():
-        return resp["matches"][0]["threatType"]
+    data = {
+        "client":{"clientId":"mitreautoz", "clientVersion":"1.5.2"},
+        "threatInfo":{
+            "threatTypes":["MALWARE", "SOCIAL_ENGINEERING"],
+            "platformTypes":["WINDOWS"],
+            "threatEntryTypes":["URL"],
+            "threatEntries":[{"url": url}]}}
+    resp = requests.post(api.get("google_api")+api.get("google_apikey"),data=json.dumps(data))
+    checkExceptionGS(resp.status_code)
+    if "matches" in resp.json().keys():
+        return resp.json()["matches"][0]["threatType"]
     else:
         return "Safe"
 
@@ -353,7 +365,8 @@ if __name__ == "__main__":
             try:
                 vt = virusTotalIP(file_to_read)
             except Exception as error:
-                print(str(error))
+                if str(error) != "":
+                    print(str(error))
                 vt = "N/A"
             except:
                 vt = "N/A"
@@ -382,6 +395,10 @@ if __name__ == "__main__":
             ok = False
             try:
                 vt = virusTotalURL(file_to_read)
+            except Exception as error:
+                if str(error) != "":
+                    print(str(error))
+                vt = "N/A"
             except:
                 vt = "N/A"
             print("VirusTotal: " + vt)
@@ -400,6 +417,10 @@ if __name__ == "__main__":
             print("URLscan: " + usc)
             try:
                 gsb = googleSafe(file_to_read)
+            except Exception as error:
+                if str(error) != "":
+                    print(str(error))
+                vt = "N/A"
             except:
                 gsb = "N/A"
             print("GoogleSafeBrowsing: " + gsb)
@@ -421,7 +442,8 @@ if __name__ == "__main__":
                     try:
                         vt = virusTotalIP(ip)
                     except Exception as error:
-                        print(str(error))
+                        if str(error) != "":
+                            print(str(error))
                         vt = "N/A"
                     except:
                         vt = "N/A"
@@ -462,7 +484,8 @@ if __name__ == "__main__":
                     try:
                         vt = virusTotalURL(url)
                     except Exception as error:
-                        print(str(error))
+                        if str(error) != "":
+                            print(str(error))
                         vt = "N/A"
                     except:
                         vt = "N/A"
@@ -482,6 +505,10 @@ if __name__ == "__main__":
                     print("URLscan: " + usc)
                     try:
                         gsb = googleSafe(url)
+                    except Exception as error:
+                        if str(error) != "":
+                            print(str(error))
+                        gsb = "N/A"
                     except:
                         gsb = "N/A"
                     print("GoogleSafeBrowsing: " + gsb)
@@ -502,7 +529,8 @@ if __name__ == "__main__":
                     try:
                         res = virusTotalFile(a_file)
                     except Exception as error:
-                        print(str(error))
+                        if str(error) != "":
+                            print(str(error))
                         res = "N/A"
                     except:
                         res = "N/A"
@@ -523,7 +551,8 @@ if __name__ == "__main__":
                         saveRecord(res, "hash")
                         print("VirusTotal: " + str(res[4]))
                     except Exception as error:
-                        print(str(error))
+                        if str(error) != "":
+                            print(str(error))
                         print("VirusTotal: N/A")
                         res = []
                     except:
