@@ -4,7 +4,7 @@ This tool check the reputation of IP addresses, Urls, Hashes or Files from multi
 
 ## OSINT used
 ##### IP Address Reputation Check
-* IBM, AbusedIPDB, FraudGuard, Auth0
+* IBM, VirusTotal, AbusedIPDB, FraudGuard, Auth0
 
 ##### URL Reputation Check
 * Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
@@ -14,10 +14,13 @@ This tool check the reputation of IP addresses, Urls, Hashes or Files from multi
 ##### Multiple file Scan
 * Virustotal
 
-    Maximum 32MB per file. Upload multiple file to Virustotal. Put each directory of the file into .txt.
-
+    File can be of any size. Any file larger than 32 MB will take a longer time and anything that goes over 200 MB may 
+    affct the performance.
+    
 ##### Hash Reputation and Hash equivalent Hash Check
 * Virustotal
+
+    Accepts Hash type of Sha1, Sha256 and MD5 and returns equivalent hash with reputation.
 
 ## Safe or block?
 The logic to calculate if the url/ip to display "To block" at the **Action** column of the output 
@@ -28,6 +31,7 @@ Below are the Safe score (their default score if no IOC is found)
 ```
   URL
     - IBM : 1 out of 10
+    - Virustotal: 0 out of x
     - AbuseIPDB : 0 out of 100
     - FraudGuard : 1 out of 5
     - Auth0 : 0
@@ -142,11 +146,11 @@ IP
 
 URL
 - python HakiChecker.py -url  list.txt -d 60	check url with 60 seconds delay (screenshot mode) 
-- python HakiChecker.py -url list.txt    	check url (no screenshot mode)
+- python HakiChecker.py -url list.txt  -d 15  	check url (no screenshot mode)
 - python HakiChecker.py -surl xxx		check single url
 
 HASH
-- python HakiChecker.py -hash list.txt -d 15	check hash or equivalent Hash
+- python HakiChecker.py -hash list.txt   	check hash or equivalent Hash
 - python HakiChecker.py -shash xxxxxx		check single hash
 
 FILE
