@@ -209,7 +209,7 @@ def virusTotalHash(hash):
     sha1 = res.json()['data']['attributes']['sha1']
     return [hash, md5, sha256, sha1, rate]
 
-# only works for url, no ip support
+# only works for ip, no url support
 def abusedIP(ip):
     headers = {
             'Key': api.get("abip_apikey"),
@@ -296,7 +296,7 @@ def googleSafe(url):
     data = {
         "client":{"clientId":"mitreautoz", "clientVersion":"1.5.2"},
         "threatInfo":{
-            "threatTypes":["MALWARE", "SOCIAL_ENGINEERING"],
+            "threatTypes":["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
             "platformTypes":["WINDOWS"],
             "threatEntryTypes":["URL"],
             "threatEntries":[{"url": url}]}}
