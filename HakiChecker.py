@@ -190,7 +190,7 @@ def abusedIP(ip):
     params = {
             'ipAddress': ip,
         }
-    resp = json.loads(requests.get(api.get("abip_apikey"), headers=headers, params=params).text)
+    resp = json.loads(requests.get(api.get("abip_api"), headers=headers, params=params).text)
     rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
     return rate
 
