@@ -1,11 +1,10 @@
 # -*- coding: utf8 -*-
 import hashlib
-
 import requests
 import json
 import base64
 from urllib.parse import quote
-from time import sleep
+from time import sleep, time
 import csv
 from requests.auth import HTTPBasicAuth
 import sys
@@ -18,12 +17,27 @@ result_url_name = "result_url_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%
 result_file_name = "result_file{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for files here
 result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for hash here
 
+# Specify where the output files should be stored in.
+# Currently, it will create a "Results" folder in the current directory and store inside
+output_directory = os.getcwd() + "/Results/"
+
 fraudGuardKeys = "fraudguard_keys.txt"
 config = "config.txt"
 api = {}
 hybrid_apikey = "NOT READY"
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
+
+ip_mode = False
+url_mode = False
+file_mode = False
+hash_mode = False
+file_to_read = None
+sip_mode = False
+surl_mode = False
+shash_mode = False
+ss_mode = False
+
 #initialise all the api keys and apis from config.txt
 def init():
     with open(config) as f:
@@ -31,7 +45,7 @@ def init():
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
-                
+
     #Initialise vt_header
     vt_headers['x-apikey'] = api.get("vt_apikey")
 
@@ -41,13 +55,21 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
+    #Create Directory for images
+    try:
+        os.mkdir("Images")
+        os.mkdir("Results")
+        #os.mkdir("images_hybrid")
+    except:
+        pass
+
 # function to save result in csv file
 def saveRecord(data, formula):
     if formula == "ip":
         fieldnames = ["Target", "IBM", "VirusTotal", "AbusedIP", "FraudGuard", "Auth0", "Action"]
-        with open(result_ip_name, mode="a+", encoding="utf-8", newline="") as csv_file:
+        with open(output_directory + result_ip_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            if os.stat(result_ip_name).st_size == 0:
+            if os.stat(output_directory + result_ip_name).st_size == 0:
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
@@ -72,9 +94,9 @@ def saveRecord(data, formula):
                              "FraudGuard":data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
         fieldnames = ["Target", "IBM", "VirusTotal", "URLScan", "GoogleSafeBrowsing", "URLScanUUID", "Action"]
-        with open(result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
+        with open(output_directory + result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            if os.stat(result_url_name).st_size == 0:
+            if os.stat(output_directory + result_url_name).st_size == 0:
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
@@ -95,16 +117,16 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5], "Action" : malic})
     elif formula == "file":
         fieldnames = ["Target", "VirusTotal"]
-        with open(result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
+        with open(output_directory + result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            if os.stat(result_file_name).st_size == 0:
+            if os.stat(output_directory + result_file_name).st_size == 0:
                 writer.writeheader()
             writer.writerow({"Target":data[0], "VirusTotal":data[1]})
     elif formula == "hash":
         fieldnames = ["Target", "MD5", "SHA256", "SHA1", "Score"]
-        with open(result_hash_name, mode="a+", encoding="utf-8", newline="") as csv_file:
+        with open(output_directory + result_hash_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            if os.stat(result_hash_name).st_size == 0:
+            if os.stat(output_directory + result_hash_name).st_size == 0:
                 writer.writeheader()
             writer.writerow({"Target":data[0], "MD5":data[1], "SHA256":data[2], "SHA1":data[3], "Score":data[4]})
 
@@ -162,7 +184,6 @@ def virusTotalFile(file):
         raise Exception('File not found. Please submit a valid file path')
     with open(file, 'rb') as f:
         data = {'file': f.read()}
-
     #upload file based on size
     file_size = os.path.getsize(file)
     if file_size <= 33554432:
@@ -242,22 +263,20 @@ def fraudGuard(ip):
     return rate + " out of 5"
 
 def urlscan(url):
-    headers = {
-        "API-Key": api.get("urlscan_apikey")
-        }
-    data = {
-        "url": url
-        }
-    resp = requests.post(api.get("urlscan_api"),data=data,headers=headers).text
+    headers = {"API-Key": api.get("urlscan_apikey")}
+    data = {"url": url}
+    resp = requests.post(api.get("urlscan_api"), data=data, headers=headers).text
     uuid = json.loads(resp)['uuid']
     nextpage = json.loads(resp)['api']
-    if delay is not None:
-        sleep(delay)
-    else:
-        sleep(60)
-    result = requests.get(nextpage).json()
-    score = result['verdicts']['overall']['score']
-    sleep(2)
+    result = requests.get(nextpage)
+    start = time()
+    time_elapsed = 0
+    #repeat until url has finished scanning. Max time is 65seconds
+    while result.status_code == 404 and time_elapsed < 65:
+        sleep(5)
+        result = requests.get(nextpage)
+        time_elapsed = time() - start
+    score = result.json()['verdicts']['overall']['score']
     with open("images/" + uuid + ".png", "wb+") as img_sc:
         try:
             img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
@@ -304,77 +323,31 @@ def hybrid(url):
     return resp2['threat_level']
 
 if __name__ == "__main__":
-    init()
+    start = time()
+    init() #initialisation
     #print(hybrid("https://chase.com.onlinesecuremyaccount.locked.situstaruhanqq820.com/"))
-    try:
-        os.mkdir("images")
-        os.mkdir("images_hybrid")
-    except:
-        pass
-    #print(urlscan("https://en.wikipedia.org/wiki/Anime"))
-    ip_mode = False
-    url_mode = False
-    file_mode = False
-    hash_mode = False
-    delay = None
-    file_to_read = None
-    sip_mode = False
-    surl_mode = False
-    shash_mode = False
-    if len(sys.argv) < 3:
-        print("Usage: " + sys.argv[0] + " -url list.txt")
-        print("Usage: " + sys.argv[0] + " -ip list.txt")
-        print("Usage: " + sys.argv[0] + " -url list.txt -d 15")
-        print("Usage: " + sys.argv[0] + " -ip list.txt -d 15")
-        print("Usage: " + sys.argv[0] + " -hash list.txt")
-        print("Usage: " + sys.argv[0] + " -hash list.txt -d 15")
-        print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt")
-        print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt -d 15")
-        print("Usage: " + sys.argv[0] + " -sip 127.0.0.1")
-        print("Usage: " + sys.argv[0] + " -surl URL")
-        print("Usage: " + sys.argv[0] + " -shash HASH")
-    else:
+
+    if len(sys.argv) == 3 or (len(sys.argv) == 4 and sys.argv[3] == "-ss"):
         ok = False
-        #with -d
-        if len(sys.argv) == 5:
-            if sys.argv[1] == "-url":
-                url_mode = True
-            elif sys.argv[1] == "-ip":
-                ip_mode = True
-            elif sys.argv[1] == "-file":
-                file_mode = True
-            elif sys.argv[1] == "-hash":
-                hash_mode = True
-            delay = int(sys.argv[4])
-            file_to_read = sys.argv[2]
-            ok = True
-        #without -d
-        elif len(sys.argv) == 3:
-            if sys.argv[1] == "-url":
-                url_mode = True
-            elif sys.argv[1] == "-ip":
-                ip_mode = True
-            elif sys.argv[1] == "-file":
-                file_mode = True
-            elif sys.argv[1] == "-hash":
-                hash_mode = True
-            elif sys.argv[1] == "-shash":
-                shash_mode = True
-            elif sys.argv[1] == "-sip":
-                sip_mode = True
-            elif sys.argv[1] == "-surl":
-                surl_mode = True
-            file_to_read = sys.argv[2]
-            ok = True
-        else:
-            print("Usage: " + sys.argv[0] + " -url list.txt")
-            print("Usage: " + sys.argv[0] + " -ip list.txt")
-            print("Usage: " + sys.argv[0] + " -url list.txt -d 15")
-            print("Usage: " + sys.argv[0] + " -ip list.txt -d 15")
-            print("Usage: " + sys.argv[0] + " -hash list.txt")
-            print("Usage: " + sys.argv[0] + " -hash list.txt -d 15")
-            print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt")
-            print("Usage(virustotal only): " + sys.argv[0] + " -file list.txt -d 15")
+        if sys.argv[1] == "-url":
+            url_mode = True
+        elif sys.argv[1] == "-ip":
+            ip_mode = True
+        elif sys.argv[1] == "-file":
+            file_mode = True
+        elif sys.argv[1] == "-hash":
+            hash_mode = True
+        elif sys.argv[1] == "-shash":
+            shash_mode = True
+        elif sys.argv[1] == "-sip":
+            sip_mode = True
+        elif sys.argv[1] == "-surl":
+            surl_mode = True
+        file_to_read = sys.argv[2]
+        if len(sys.argv) == 4 and sys.argv[3] == "-ss":
+            ss_mode = True
+        ok = True
+
         if sip_mode:
             ok = False
             try:
@@ -387,9 +360,6 @@ if __name__ == "__main__":
             print("VirusTotal: " + vt)
             try:
                 abip = abusedIP(file_to_read)
-            except Exception as error:
-                print(str(error))
-                abip = "N/A"
             except:
                 abip = "N/A"
             print("Abused IP: " + abip)
@@ -417,9 +387,6 @@ if __name__ == "__main__":
             print("VirusTotal: " + vt)
             try:
                 ibm_rec = IBM_URL(file_to_read)
-            except Exception as error:
-                print(str(error))
-                ibm_rec = "N/A"
             except:
                 ibm_rec = "N/A"
             print("IBM: " + ibm_rec)
@@ -443,13 +410,14 @@ if __name__ == "__main__":
             print("sha256: " + hv[2])
             print("sha1: " + hv[3])
             print("score: " + hv[4])
+
         if ok == True:
             file_data = open(file_to_read, 'r').read().split('\n')
             if ip_mode == True:
                 for ip in file_data:
                     if ip == "":
                         continue
-                    print("IN USE: " + ip)
+                    print("---------------------------------------\n" + ip + "\n---------------------------------------")
                     try:
                         vt = virusTotalIP(ip)
                     except Exception as error:
@@ -470,9 +438,6 @@ if __name__ == "__main__":
                     print("FraudGuard: " + fg)
                     try:
                         ibm_rec = IBM_IP(ip)
-                    except Exception as error:
-                        print(str(error))
-                        ibm_rec = "N/A"
                     except:
                         ibm_rec = "N/A"
                     print("IBM: " + ibm_rec)
@@ -488,14 +453,12 @@ if __name__ == "__main__":
                     dataset.append(abip)
                     dataset.append(fg)
                     dataset.append(ath0)
-                    saveRecord(dataset,"ip")
-                    if delay is not None:
-                        sleep(delay)
+                    saveRecord(dataset, "ip")
             elif url_mode == True:
                 for url in file_data:
                     if url == "":
                         continue
-                    print(url)
+                    print("---------------------------------------\n" + url + "\n---------------------------------------")
                     try:
                         vt = virusTotalURL(url)
                     except Exception as error:
@@ -506,9 +469,6 @@ if __name__ == "__main__":
                     print("VirusTotal: " + vt)
                     try:
                         ibm_rec = IBM_URL(url)
-                    except Exception as error:
-                        print(str(error))
-                        ibm_rec = "N/A"
                     except:
                         ibm_rec = "N/A"
                     print("IBM: " + ibm_rec)
@@ -532,14 +492,13 @@ if __name__ == "__main__":
                     dataset.append(usc)
                     dataset.append(gsb)
                     dataset.append(uscuuid)
-                    saveRecord(dataset,"url")
-                    if delay is not None:
-                        sleep(delay)
+                    saveRecord(dataset, "url")
             elif file_mode == True:
                 for a_file in file_data:
+                    startFileTime = time()
                     if a_file == "":
                         continue
-                    print(a_file)
+                    print("---------------------------------------\nChecking:   " + a_file)
                     try:
                         res = virusTotalFile(a_file)
                     except Exception as error:
@@ -548,17 +507,17 @@ if __name__ == "__main__":
                     except:
                         res = "N/A"
                     print("VirusTotal: " + str(res))
+                    print("Time Taken: " + str(round(time() - startFileTime, 2)))
                     dataset = []
                     dataset.append(a_file)
                     dataset.append(res)
                     saveRecord(dataset, "file")
-                    if delay is not None:
-                        sleep(delay)
+
             elif hash_mode == True:
                 for a_hash in file_data:
                     if a_hash == "":
                         continue
-                    print(a_hash)
+                    print("---------------------------------------\nChecking:   " + a_hash)
                     try:
                         res = virusTotalHash(a_hash)
                         saveRecord(res, "hash")
@@ -570,6 +529,17 @@ if __name__ == "__main__":
                     except:
                         res = []
                         print("VirusTotal: N/A")
+            print("---------------------------------------\nTotal Time Elapsed: " + str(round(time() - start, 2)))
 
-                    if delay is not None:
-                        sleep(delay)
+    else:
+        #Help
+        print("Wrong Syntax. Please refer below for correct syntax.")
+        print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
+        print("Usage: " + sys.argv[0] + " -ip list.txt")
+        print("Usage: " + sys.argv[0] + " -surl xxxxxx")
+        print("Usage: " + sys.argv[0] + " -url list.txt")
+        print("Usage: " + sys.argv[0] + " -url list.txt -ss")
+        print("Usage: " + sys.argv[0] + " -shash xxxxx")
+        print("Usage: " + sys.argv[0] + " -hash list.txt")
+        print("Usage: " + sys.argv[0] + " -file list.txt")
+

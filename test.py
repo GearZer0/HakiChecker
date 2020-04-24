@@ -2,117 +2,69 @@ import base64
 import json
 import os
 import sys
-from time import sleep
+from time import sleep, time
 
 import hashlib
+from urllib.parse import quote
 
 import requests
-delay = 60
+delay = 15
 api={}
 
-def md5(fname):
-    hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
+vt_headers = {'Accept': 'application/json'}
+ibm_headers = {"Content-Type": "application/json"}
+#initialise all the api keys and apis from config.txt
 def init():
     with open("config.txt") as f:
         for line in f:
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
+    #Initialise vt_header
+    vt_headers['x-apikey'] = api.get("vt_apikey")
+    #Initialise ibm_header
+    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
+    data = base64.b64encode(pass_data.encode())
+    final = str(data.decode('utf-8'))
+    ibm_headers['Authorization'] = "Basic " + final
 
-def virusTotalHash(hash_value):
-    params = {
-        'apikey': api.get("vt_apikey"),
-        'resource': hash_value
-        }
-    headers = {"Accept-Encoding": "gzip, deflate", }
-    resp = requests.get(api.get("vt_hash_api"), params=params, headers=headers).json()
-    try:
-        md5 =resp['md5']
-    except:
-        md5 = "N/A"
-    try:
-        sha256 =resp['sha256']
-    except:
-        sha256 = "N/A"
-    try:
-        sha1 =resp['sha1']
-    except:
-        sha1 = "N/A"
-    try:
-        score = str(resp['positives'])+' out of '+str(resp['total'])
-    except:
-        score = "N/A"
-    return [hash_value, md5, sha256, sha1, score]
+def urlscan(url):
+    headers = {"API-Key": api.get("urlscan_apikey")}
+    data = {"url": url}
+    resp = requests.post(api.get("urlscan_api"), data=data, headers=headers).text
+    uuid = json.loads(resp)['uuid']
+    nextpage = json.loads(resp)['api']
+    result = requests.get(nextpage)
+    start = time()
+    time_elapsed = 0
+    while result.status_code == 404 and time_elapsed < 65:
+        sleep(5)
+        result = requests.get(nextpage)
+        time_elapsed = time() - start
+    print(time_elapsed)
+    score = result.json()['verdicts']['overall']['score']
+    with open("images/" + uuid + ".png", "wb+") as img_sc:
+        try:
+            img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
+        except:
+            pass
+    return [str(score) + " out of 100", uuid]
 
-
-def checkExceptionVT(code):
-    if code == 401:
-        raise Exception("ERROR: Please verify API KEY!")
-    elif code == 429:
-        raise Exception("ERROR: Requests Exceeded!")
-    elif code != 200:
-        raise Exception("")
-
-def virusTotalFile(file):
-    if not os.path.isfile(file):
-        raise Exception('File not found. Please submit a valid file path')
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    with open(file, 'rb') as f:
-        data = {'file': f.read()}
-
-    #upload file based on size
-    file_size = os.path.getsize(file)
-    if file_size <= 33554432:
-        res = requests.post(api.get("vt_file_api"), headers=headers, files=data)
-    else:  # bigger than 32 mb - there may be performance issue as a file gets too big
-        res = requests.get(api.get("vt_file_api") + '/upload_url', headers=headers)
-        checkExceptionVT(res.status_code)
-        upload_url = res.json()['data']
-        res = requests.post(upload_url, headers=headers, files=data)
-    checkExceptionVT(res.status_code)
-
-    #retrieve analysis
-    filehash = str(md5(file))
-    return virusTotalHash3(filehash)[4]
-
-def virusTotalHash3(hash):
-    headers = {
-        'x-apikey': api.get("vt_apikey"),
-        'Accept': 'application/json'
-    }
-    res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=headers)
-    checkExceptionVT(res.status_code)
-    harmless = int(res.json()['data']['attributes']['last_analysis_stats']['harmless'])
-    malicious = int(res.json()['data']['attributes']['last_analysis_stats']['malicious'])
-    suspicious = int(res.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-    undetected = int(res.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious + suspicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-    md5 = res.json()['data']['attributes']['md5']
-    sha256 = res.json()['data']['attributes']['sha256']
-    sha1 = res.json()['data']['attributes']['sha1']
-    return [hash, md5, sha256, sha1, rate]
 
 if __name__ == "__main__":
     init()
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
-    for file in file_data:
-        if file == "":
+    for url in file_data:
+        if url == "":
             continue
-        print("IN USE: " + file)
+        print("IN USE: " + url)
         try:
-            vt = virusTotalFile(file)
-        except Exception as error:
-            print(str(error))
-            vt = "N/A"
-        print("VirusTotal: " + str(vt))
+            usc = urlscan(url)
+            uscuuid = usc[1]
+            usc = usc[0]
+        except:
+            usc = "N/A"
+            uscuuid = "N/A"
+        print("URLscan: " + usc)
