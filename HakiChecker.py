@@ -22,7 +22,8 @@ fraudGuardKeys = "fraudguard_keys.txt"
 config = "config.txt"
 api = {}
 hybrid_apikey = "NOT READY"
-vt_headers = {}
+vt_headers = {'Accept': 'application/json'}
+ibm_headers = {"Content-Type": "application/json"}
 #initialise all the api keys and apis from config.txt
 def init():
     with open(config) as f:
@@ -30,9 +31,15 @@ def init():
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
                 api[key.strip()] = val.strip()
+                
     #Initialise vt_header
     vt_headers['x-apikey'] = api.get("vt_apikey")
-    vt_headers['Accept'] = 'application/json'
+
+    #Initialise ibm_header
+    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
+    data = base64.b64encode(pass_data.encode())
+    final = str(data.decode('utf-8'))
+    ibm_headers['Authorization'] = "Basic " + final
 
 # function to save result in csv file
 def saveRecord(data, formula):
@@ -196,21 +203,13 @@ def abusedIP(ip):
 
 # call to this function when url mode on
 def IBM_URL(url):
-    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
-    data = base64.b64encode(pass_data.encode())
-    final = str(data.decode('utf-8'))
-    headers = {"Authorization": "Basic "+final, "Content-Type":"application/json"}
-    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=headers).text)
+    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
     rate = str(resp['result']['score']) + " out of 10"
     return rate
 
 # call to this function when ip mode on
 def IBM_IP(ip):
-    pass_data = api.get("ibm_apikey") + ":" + api.get("ibm_apipass")
-    data = base64.b64encode(pass_data.encode())
-    final = str(data.decode('utf-8'))
-    headers = {"Authorization": "Basic "+final, "Content-Type":"application/json"}
-    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=headers).text)
+    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
     rate = str(resp['history'][-1]['score']) + " out of 10"
     return rate
 
@@ -388,6 +387,9 @@ if __name__ == "__main__":
             print("VirusTotal: " + vt)
             try:
                 abip = abusedIP(file_to_read)
+            except Exception as error:
+                print(str(error))
+                abip = "N/A"
             except:
                 abip = "N/A"
             print("Abused IP: " + abip)
@@ -415,6 +417,9 @@ if __name__ == "__main__":
             print("VirusTotal: " + vt)
             try:
                 ibm_rec = IBM_URL(file_to_read)
+            except Exception as error:
+                print(str(error))
+                ibm_rec = "N/A"
             except:
                 ibm_rec = "N/A"
             print("IBM: " + ibm_rec)
@@ -465,6 +470,9 @@ if __name__ == "__main__":
                     print("FraudGuard: " + fg)
                     try:
                         ibm_rec = IBM_IP(ip)
+                    except Exception as error:
+                        print(str(error))
+                        ibm_rec = "N/A"
                     except:
                         ibm_rec = "N/A"
                     print("IBM: " + ibm_rec)
@@ -498,6 +506,9 @@ if __name__ == "__main__":
                     print("VirusTotal: " + vt)
                     try:
                         ibm_rec = IBM_URL(url)
+                    except Exception as error:
+                        print(str(error))
+                        ibm_rec = "N/A"
                     except:
                         ibm_rec = "N/A"
                     print("IBM: " + ibm_rec)
