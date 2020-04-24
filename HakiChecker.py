@@ -294,7 +294,7 @@ def checkExceptionGS(code):
 
 def googleSafe(url):
     data = {
-        "client":{"clientId":"mitreautoz", "clientVersion":"1.5.2"},
+        "client":{"clientId":"ProjectAuto", "clientVersion":"1.5.2"},
         "threatInfo":{
             "threatTypes":["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
             "platformTypes":["WINDOWS"],
@@ -305,7 +305,7 @@ def googleSafe(url):
     if "matches" in resp.json().keys():
         return resp.json()["matches"][0]["threatType"]
     else:
-        return "Safe"
+        return "harmless"
 
 def auth0(ip):
     headers = {
