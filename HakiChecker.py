@@ -94,7 +94,7 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "AbusedIP":data[3],
                              "FraudGuard":data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
-        fieldnames = ["Target", "IBM", "VirusTotal", "URLScan", "GoogleSafeBrowsing", "URLScanUUID", "Action"]
+        fieldnames = ["Target", "IBM", "VirusTotal", "URLScan", "GoogleSafeBrowsing", "URLScanUUID", "PhishTank", "Action"]
         with open(output_directory + result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(output_directory + result_url_name).st_size == 0:
@@ -113,9 +113,12 @@ def saveRecord(data, formula):
             if data[4].startswith("Safe") == False and data[4] != "N/A":
                 #malic = "Malicious"
                 nonzero += 1
+            if data[6] == True and data[6] != "N/A":
+                #malic = "Malicious"
+                nonzero += 1
             if nonzero > 0:
                 malic = "To Block"
-            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5], "Action" : malic})
+            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5], "PhishTank":data[6], "Action" : malic})
     elif formula == "file":
         fieldnames = ["Target", "VirusTotal"]
         with open(output_directory + result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -337,15 +340,15 @@ def hybrid(url):
 
 def phishtank(url):
     data = {
-        "url":base64.urlsafe_b64encode(bytes(url, "utf-8")).decode('utf-8'),
+        "url" : url,
         'format' : "json",
         'app_key' : api.get("phish_apikey")
         }
     headers = {
-        "User-Agent": "phishtank/Steward"
+        "User-Agent": "phishtank/ProjectAuto"
         }
-    resp = requests.post(api.get("phish_api"),headers=headers, data=data).text
-    print(resp)
+    resp = requests.post(api.get("phish_api"),headers=headers, data=data).json()
+    return resp['results']['in_database']
 
 if __name__ == "__main__":
     start = time()
@@ -437,6 +440,11 @@ if __name__ == "__main__":
             except:
                 gsb = "N/A"
             print("GoogleSafeBrowsing: " + gsb)
+            try:
+                pt = phishtank(url)
+            except:
+                pt = "N/A"
+            print("PhishTank: " + str(pt))
         elif shash_mode:
             ok = False
             hv = virusTotalHash(file_to_read)
@@ -525,6 +533,11 @@ if __name__ == "__main__":
                     except:
                         gsb = "N/A"
                     print("GoogleSafeBrowsing: " + gsb)
+                    try:
+                        pt = phishtank(url)
+                    except:
+                        pt = "N/A"
+                    print("PhishTank: " + str(pt))
                     dataset = []
                     dataset.append(url)
                     dataset.append(ibm_rec)
@@ -532,6 +545,7 @@ if __name__ == "__main__":
                     dataset.append(usc)
                     dataset.append(gsb)
                     dataset.append(uscuuid)
+                    dataset.append(pt)
                     saveRecord(dataset, "url")
             elif file_mode == True:
                 for a_file in file_data:
@@ -574,7 +588,6 @@ if __name__ == "__main__":
             print("---------------------------------------\nTotal Time Elapsed: " + str(round(time() - start, 2)))
 
     else:
-        phishtank("https://cutt.ly/dyyudV3")
         #Help
         print("Wrong Syntax. Please refer below for correct syntax.")
         print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
