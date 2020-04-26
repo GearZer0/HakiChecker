@@ -4,6 +4,7 @@ import requests
 import json
 import base64
 from urllib.parse import quote
+from urllib.parse import urlencode
 from time import sleep, time
 import csv
 from requests.auth import HTTPBasicAuth
@@ -209,7 +210,7 @@ def virusTotalHash(hash):
     sha1 = res.json()['data']['attributes']['sha1']
     return [hash, md5, sha256, sha1, rate]
 
-# only works for ip, no url support
+# only works for url, no ip support
 def abusedIP(ip):
     headers = {
             'Key': api.get("abip_apikey"),
@@ -305,7 +306,7 @@ def googleSafe(url):
     if "matches" in resp.json().keys():
         return resp.json()["matches"][0]["threatType"]
     else:
-        return "harmless"
+        return "Safe"
 
 def auth0(ip):
     headers = {
@@ -333,6 +334,18 @@ def hybrid(url):
         except:
             pass
     return resp2['threat_level']
+
+def phishtank(url):
+    data = {
+        "url":base64.urlsafe_b64encode(bytes(url, "utf-8")).decode('utf-8'),
+        'format' : "json",
+        'app_key' : api.get("phish_apikey")
+        }
+    headers = {
+        "User-Agent": "phishtank/Steward"
+        }
+    resp = requests.post(api.get("phish_api"),headers=headers, data=data).text
+    print(resp)
 
 if __name__ == "__main__":
     start = time()
@@ -561,6 +574,7 @@ if __name__ == "__main__":
             print("---------------------------------------\nTotal Time Elapsed: " + str(round(time() - start, 2)))
 
     else:
+        phishtank("https://cutt.ly/dyyudV3")
         #Help
         print("Wrong Syntax. Please refer below for correct syntax.")
         print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
