@@ -7,7 +7,7 @@ This tool check the reputation of IP addresses, Urls, Hashes or Files from multi
 * IBM, VirusTotal, AbusedIPDB, FraudGuard, Auth0
 
 ##### URL Reputation Check
-* Virustotal, IBM, urlscan.io, GoogleSafeBrowsing
+* Virustotal, IBM, urlscan.io, GoogleSafeBrowsing, PhishTank
 
     For urlscan.io, whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
 
@@ -126,6 +126,13 @@ SOCIAL_ENGINEERING 		  Social engineering threat type.
 UNWANTED_SOFTWARE 		  Unwanted software threat type.
 POTENTIALLY_HARMFUL_APPLICATION   Potentially harmful application threat type.
 ```
+##### [PhishTank:](https://www.phishtank.com/api_info.php)
+Phish Tank is used to check for phishing site. 
+1. Login to Phish Tank and register for a new application to get API KEY 
+2. Open up `config.txt` and under `[Phish Tank]`, append API KEY after `phish_apikey = `
+3. `phish_user` should be a name describing the application use or it can be left blank. Its API supports **2000 
+requests per 5 minute**.
+
 ## Commands Available
 To run the script, there are a few commands available. 
 ```
