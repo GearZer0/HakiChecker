@@ -340,15 +340,15 @@ def hybrid(url):
 
 def phishtank(url):
     data = {
-        "url" : url,
-        'format' : "json",
-        'app_key' : api.get("phish_apikey")
+        "url": url,
+        'format': "json",
+        'app_key': api.get("phish_apikey")
         }
     headers = {
-        "User-Agent": "phishtank/ProjectAuto"
+        "User-Agent": "phishtank/" + api.get("phish_user")
         }
-    resp = requests.post(api.get("phish_api"),headers=headers, data=data).json()
-    return resp['results']['in_database']
+    resp = requests.post(api.get("phish_api"), headers=headers, data=data)
+    return resp.json()['results']['in_database']
 
 if __name__ == "__main__":
     start = time()
@@ -441,7 +441,7 @@ if __name__ == "__main__":
                 gsb = "N/A"
             print("GoogleSafeBrowsing: " + gsb)
             try:
-                pt = phishtank(url)
+                pt = phishtank(file_to_read)
             except:
                 pt = "N/A"
             print("PhishTank: " + str(pt))

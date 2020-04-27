@@ -37,4 +37,5 @@ hybrid_api = https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis
 
 [PhishTank]
 phish_apikey =
+phish_user =
 phish_api = https://checkurl.phishtank.com/checkurl/
