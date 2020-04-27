@@ -22,12 +22,14 @@ result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_
 # Currently, it will create a "Results" folder in the current directory and store inside
 output_directory = os.getcwd() + "/Results/"
 
-fraudGuardKeys = "fraudguard_keys.txt"
-config = "config.txt"
-api = {}
+#Constants
+NONE = "N/A"
+FG_KEYS = "fraudguard_keys.txt"
+CONFIG = "config.txt"
 hybrid_apikey = "NOT READY"
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
+api = {}
 
 ip_mode = False
 url_mode = False
@@ -41,7 +43,7 @@ ss_mode = False
 
 #initialise all the api keys and apis from config.txt
 def init():
-    with open(config) as f:
+    with open(CONFIG) as f:
         for line in f:
             if line != "\n" and not line.startswith('['):
                 (key, val) = line.split("=", 1)
@@ -74,19 +76,19 @@ def saveRecord(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if data[1].startswith("1 out") == False and data[1] != "N/A":
+            if data[1].startswith("1 out") == False and data[1] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[2].startswith("0 out") == False and data[2] != "N/A":
+            if data[2].startswith("0 out") == False and data[2] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("0 out") == False and data[3] != "N/A":
+            if data[3].startswith("0 out") == False and data[3] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[4].startswith("1 out") == False and data[4] != "N/A":
+            if data[4].startswith("1 out") == False and data[4] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[5] != "0" and data[5] != "N/A":
+            if data[5] != "0" and data[5] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
@@ -94,31 +96,37 @@ def saveRecord(data, formula):
             writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "AbusedIP":data[3],
                              "FraudGuard":data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
-        fieldnames = ["Target", "IBM", "VirusTotal", "URLScan", "GoogleSafeBrowsing", "URLScanUUID", "PhishTank", "Action"]
+        if ss_mode:
+            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank","URLScan", "URLScanUUID", "Action"]
+        else:
+            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank", "Action"]
         with open(output_directory + result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(output_directory + result_url_name).st_size == 0:
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if data[1].startswith("1 out") == False and data[1] != "N/A":
+            if data[1].startswith("1 out") == False and data[1] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[2].startswith("0 out") == False and data[2] != "N/A":
+            if data[2].startswith("0 out") == False and data[2] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("0 out") == False and data[3] != "N/A":
+            if data[3].startswith("Safe") == False and data[4] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[4].startswith("Safe") == False and data[4] != "N/A":
+            if data[4] == True and data[4] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
-            if data[6] == True and data[6] != "N/A":
-                #malic = "Malicious"
+            if ss_mode and data[5].startswith("0 out") == False and data[5] != NONE:
+                # malic = "Malicious"
                 nonzero += 1
             if nonzero > 0:
                 malic = "To Block"
-            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "URLScan": data[3], "GoogleSafeBrowsing":data[4], "URLScanUUID":data[5], "PhishTank":data[6], "Action" : malic})
+            if ss_mode:
+                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3], "PhishTank":data[4], "URLScan": data[5], "URLScanUUID":data[6], "Action" : malic})
+            else:
+                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3], "PhishTank":data[4], "Action" : malic})
     elif formula == "file":
         fieldnames = ["Target", "VirusTotal"]
         with open(output_directory + result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -239,15 +247,15 @@ def IBM_IP(ip):
     return rate
 
 def getFGKey():
-    keys = open(fraudGuardKeys, 'r').read().split('\n')
+    keys = open(FG_KEYS, 'r').read().split('\n')
     if keys == "":
         print("Are you sure about FG Keys availability?")
     return keys[0]
 
 def removeOldFGKey(get_key):
-    keys = open(fraudGuardKeys, 'r').read().split('\n')
-    open(fraudGuardKeys, 'w+').close()
-    with open(fraudGuardKeys, 'a+') as fl:
+    keys = open(FG_KEYS, 'r').read().split('\n')
+    open(FG_KEYS, 'w+').close()
+    with open(FG_KEYS, 'a+') as fl:
         for i in keys:
             if i != get_key:
                 fl.write(i + "\n")
@@ -387,29 +395,29 @@ if __name__ == "__main__":
             except Exception as error:
                 if str(error) != "":
                     print(str(error))
-                vt = "N/A"
+                vt = NONE
             except:
-                vt = "N/A"
+                vt = NONE
             print("VirusTotal: " + vt)
             try:
                 abip = abusedIP(file_to_read)
             except:
-                abip = "N/A"
+                abip = NONE
             print("Abused IP: " + abip)
             try:
                 fg = fraudGuard(file_to_read)
             except:
-                fg = "N/A"
+                fg = NONE
             print("FraudGuard: " + fg)
             try:
                 ibm_rec = IBM_IP(file_to_read)
             except:
-                ibm_rec = "N/A"
+                ibm_rec = NONE
             print("IBM: " + ibm_rec)
             try:
                 ath0 = auth0(file_to_read)
             except:
-                ath0 = "N/A"
+                ath0 = NONE
             print("Auth0: " + str(ath0))
         elif surl_mode:
             ok = False
@@ -418,41 +426,42 @@ if __name__ == "__main__":
             except Exception as error:
                 if str(error) != "":
                     print(str(error))
-                vt = "N/A"
+                vt = NONE
             except:
-                vt = "N/A"
+                vt = NONE
             print("VirusTotal: " + vt)
             try:
                 ibm_rec = IBM_URL(file_to_read)
             except:
-                ibm_rec = "N/A"
+                ibm_rec = NONE
             print("IBM: " + ibm_rec)
-            try:
-                usc = urlscan(file_to_read)
-                uscuuid = usc[1]
-                usc = usc[0]
-            except:
-                usc = "N/A"
-                uscuuid = "N/A"
-            print("URLscan: " + usc)
             try:
                 gsb = googleSafe(file_to_read)
             except Exception as error:
                 if str(error) != "":
                     print(str(error))
-                gsb = "N/A"
+                gsb = NONE
             except:
-                gsb = "N/A"
+                gsb = NONE
             print("GoogleSafeBrowsing: " + gsb)
             try:
                 pt = phishtank(file_to_read)
             except Exception as error:
                 if str(error) != "":
                     print(str(error))
-                pt = "N/A"
+                pt = NONE
             except:
-                pt = "N/A"
+                pt = NONE
             print("PhishTank: " + str(pt))
+            if ss_mode:
+                try:
+                    usc = urlscan(file_to_read)
+                    uscuuid = usc[1]
+                    usc = usc[0]
+                except:
+                    usc = NONE
+                    uscuuid = NONE
+                print("URLscan: " + usc + "\nScreenshot saved: " + uscuuid)
         elif shash_mode:
             ok = False
             hv = virusTotalHash(file_to_read)
@@ -473,29 +482,29 @@ if __name__ == "__main__":
                     except Exception as error:
                         if str(error) != "":
                             print(str(error))
-                        vt = "N/A"
+                        vt = NONE
                     except:
-                        vt = "N/A"
+                        vt = NONE
                     print("VirusTotal: " + vt)
                     try:
                         abip = abusedIP(ip)
                     except:
-                        abip = "N/A"
+                        abip = NONE
                     print("Abused IP: " + abip)
                     try:
                         fg = fraudGuard(ip)
                     except:
-                        fg = "N/A"
+                        fg = NONE
                     print("FraudGuard: " + fg)
                     try:
                         ibm_rec = IBM_IP(ip)
                     except:
-                        ibm_rec = "N/A"
+                        ibm_rec = NONE
                     print("IBM: " + ibm_rec)
                     try:
                         ath0 = auth0(ip)
                     except:
-                        ath0 = "N/A"
+                        ath0 = NONE
                     print("Auth0: " + str(ath0))
                     dataset = []
                     dataset.append(ip)
@@ -515,49 +524,51 @@ if __name__ == "__main__":
                     except Exception as error:
                         if str(error) != "":
                             print(str(error))
-                        vt = "N/A"
+                        vt = NONE
                     except:
-                        vt = "N/A"
+                        vt = NONE
                     print("VirusTotal: " + vt)
                     try:
                         ibm_rec = IBM_URL(url)
                     except:
-                        ibm_rec = "N/A"
+                        ibm_rec = NONE
                     print("IBM: " + ibm_rec)
-                    try:
-                        usc = urlscan(url)
-                        uscuuid = usc[1]
-                        usc = usc[0]
-                    except:
-                        usc = "N/A"
-                        uscuuid = "N/A"
-                    print("URLscan: " + usc)
                     try:
                         gsb = googleSafe(url)
                     except Exception as error:
                         if str(error) != "":
                             print(str(error))
-                        gsb = "N/A"
+                        gsb = NONE
                     except:
-                        gsb = "N/A"
+                        gsb = NONE
                     print("GoogleSafeBrowsing: " + gsb)
                     try:
                         pt = phishtank(url)
                     except Exception as error:
                         if str(error) != "":
                             print(str(error))
-                        pt = "N/A"
+                        pt = NONE
                     except:
-                        pt = "N/A"
+                        pt = NONE
                     print("PhishTank: " + str(pt))
+                    if ss_mode:
+                        try:
+                            usc = urlscan(url)
+                            uscuuid = usc[1]
+                            usc = usc[0]
+                        except:
+                            usc = NONE
+                            uscuuid = NONE
+                        print("URLscan: " + usc)
                     dataset = []
                     dataset.append(url)
                     dataset.append(ibm_rec)
                     dataset.append(vt)
-                    dataset.append(usc)
                     dataset.append(gsb)
-                    dataset.append(uscuuid)
                     dataset.append(pt)
+                    if ss_mode:
+                        dataset.append(usc)
+                        dataset.append(uscuuid)
                     saveRecord(dataset, "url")
             elif file_mode == True:
                 for a_file in file_data:
@@ -570,9 +581,9 @@ if __name__ == "__main__":
                     except Exception as error:
                         if str(error) != "":
                             print(str(error))
-                        res = "N/A"
+                        res = NONE
                     except:
-                        res = "N/A"
+                        res = NONE
                     print("VirusTotal: " + str(res))
                     print("Time Taken: " + str(round(time() - startFileTime, 2)))
                     dataset = []
@@ -605,6 +616,7 @@ if __name__ == "__main__":
         print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
         print("Usage: " + sys.argv[0] + " -ip list.txt")
         print("Usage: " + sys.argv[0] + " -surl xxxxxx")
+        print("Usage: " + sys.argv[0] + " -surl xxxxxx -ss")
         print("Usage: " + sys.argv[0] + " -url list.txt")
         print("Usage: " + sys.argv[0] + " -url list.txt -ss")
         print("Usage: " + sys.argv[0] + " -shash xxxxx")
