@@ -338,12 +338,6 @@ def hybrid(url):
             pass
     return resp2['threat_level']
 
-def checkExceptionPT(code):
-    if code == 509:
-        raise Exception("ERROR: Requests Exceeded!")
-    elif code != 200:
-        raise Exception("")
-
 def phishtank(url):
     data = {
         "url": url,
