@@ -338,6 +338,12 @@ def hybrid(url):
             pass
     return resp2['threat_level']
 
+def checkExceptionPT(code):
+    if code == 509:
+        raise Exception("ERROR: Requests Exceeded!")
+    elif code != 200:
+        raise Exception("")
+
 def phishtank(url):
     data = {
         "url": url,
@@ -348,6 +354,10 @@ def phishtank(url):
         "User-Agent": "phishtank/" + api.get("phish_user")
         }
     resp = requests.post(api.get("phish_api"), headers=headers, data=data)
+    if resp.status_code == 509:
+        raise Exception("ERROR: Requests Exceeded! Please wait at most 5 minutes to reset the number of requests.")
+    elif resp.status_code != 200:
+        raise Exception("")
     return resp.json()['results']['in_database']
 
 if __name__ == "__main__":
@@ -436,12 +446,16 @@ if __name__ == "__main__":
             except Exception as error:
                 if str(error) != "":
                     print(str(error))
-                vt = "N/A"
+                gsb = "N/A"
             except:
                 gsb = "N/A"
             print("GoogleSafeBrowsing: " + gsb)
             try:
                 pt = phishtank(file_to_read)
+            except Exception as error:
+                if str(error) != "":
+                    print(str(error))
+                pt = "N/A"
             except:
                 pt = "N/A"
             print("PhishTank: " + str(pt))
@@ -535,6 +549,10 @@ if __name__ == "__main__":
                     print("GoogleSafeBrowsing: " + gsb)
                     try:
                         pt = phishtank(url)
+                    except Exception as error:
+                        if str(error) != "":
+                            print(str(error))
+                        pt = "N/A"
                     except:
                         pt = "N/A"
                     print("PhishTank: " + str(pt))
