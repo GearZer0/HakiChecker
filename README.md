@@ -39,8 +39,9 @@ Below are the Safe score (their default score if no IOC is found)
    URL
     - Virustotal : 0 out of x
     - IBM : 1 out of 10
-    - urlscan.io : 0 out of 100
     - GoogleSafeBrowsing : Safe
+    - Phish Tank : False
+    - urlscan.io : 0 out of 100 (Only available for screenshot mode)
 ```
 Anything other than the above will be flagged as "To block"
 
@@ -148,12 +149,14 @@ To run the script, there are a few commands available.
 These are some examples of the commands that can be types in cmd.
 ```
 IP
-- python HakiChecker.py -ip list.txt 		check IP address with no delay
+- python HakiChecker.py -ip list.txt 		check IP address
 - python HakiChecker.py -sip xx.xx.xx.xx	check single IP address
 
 URL
-- python HakiChecker.py -url list.txt  	    check url
-- python HakiChecker.py -surl xxx		    check single url
+- python HakiChecker.py -url list.txt  	    check url without screenshot (URLscan.io not used)
+- python HakiChecker.py -url list.txt -ss   check url with screenshot mode (URLscan.io)
+- python HakiChecker.py -surl xxx		    check single url without screenshot (URLscan.io not used)
+- python HakiChecker.py -surl xxx -ss	    check single url with screenshot mode (URLscan.io)
 
 HASH
 - python HakiChecker.py -hash list.txt   	check hash or equivalent Hash
