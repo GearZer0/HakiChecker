@@ -1,15 +1,20 @@
-import base64
-import json
-import os
-import sys
-from time import sleep, time
 
-import hashlib
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 from urllib.parse import quote
+import base64
+import sys
 
 import requests
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 delay = 15
 api={}
+
 
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
@@ -28,43 +33,40 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-def urlscan(url):
-    headers = {"API-Key": api.get("urlscan_apikey")}
-    data = {"url": url}
-    resp = requests.post(api.get("urlscan_api"), data=data, headers=headers).text
-    uuid = json.loads(resp)['uuid']
-    nextpage = json.loads(resp)['api']
-    result = requests.get(nextpage)
-    start = time()
-    time_elapsed = 0
-    while result.status_code == 404 and time_elapsed < 65:
-        sleep(5)
-        result = requests.get(nextpage)
-        time_elapsed = time() - start
-    print(time_elapsed)
-    score = result.json()['verdicts']['overall']['score']
-    with open("images/" + uuid + ".png", "wb+") as img_sc:
-        try:
-            img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
-        except:
-            pass
-    return [str(score) + " out of 100", uuid]
-
+def ciscoTalos(ip):
+    # Initialise selenium driver
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--window-size=1325x744")
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+    driver = webdriver.Chrome(executable_path="C:/Users/***REMOVED***/Downloads/chromedriver.exe", options=chrome_options)
+    driver.implicitly_wait(5)
+    driver.get("https://talosintelligence.com/reputation_center/lookup?search=" + quote(ip))
+    timeout = 5
+    element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
+    WebDriverWait(driver, timeout).until(element_present)
+    # print("Page Loaded: " + driver.title)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
+    imageName = ip.split("://")
+    if len(imageName) == 2:
+        imageName = imageName[1].split("/")
+    driver.save_screenshot("Images/" + imageName[0] + "_ciscoTalos.png")
+    driver.quit()
+    return web_reputation
 
 if __name__ == "__main__":
     init()
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
-    for url in file_data:
-        if url == "":
+    for ip in file_data:
+        if ip == "":
             continue
-        print("IN USE: " + url)
+        print("IN USE: " + ip)
         try:
-            usc = urlscan(url)
-            uscuuid = usc[1]
-            usc = usc[0]
-        except:
-            usc = "N/A"
-            uscuuid = "N/A"
-        print("URLscan: " + usc)
+            ct = ciscoTalos(ip)
+        except Exception as e:
+            print(e)
+            ct = "N/A"
+        print("CiscoTalos: " + ct)
