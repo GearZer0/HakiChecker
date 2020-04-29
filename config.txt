@@ -14,7 +14,6 @@ ibm_apipass =
 ibm_ip_api = https://api.xforce.ibmcloud.com/ipr/
 ibm_url_api = https://api.xforce.ibmcloud.com/url/
 
-
 [Fraud Guard]
 fg_api = https://api.fraudguard.io/ip/
 
@@ -39,3 +38,7 @@ hybrid_api = https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis
 phish_apikey =
 phish_user =
 phish_api = https://checkurl.phishtank.com/checkurl/
+
+[Cisco Talos]
+cisco_drive =
+cisco_iporurl_link = https://talosintelligence.com/reputation_center/lookup?search=

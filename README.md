@@ -4,10 +4,10 @@ This tool check the reputation of IP addresses, Urls, Hashes or Files from multi
 
 ## OSINT used
 ##### IP Address Reputation Check
-* IBM, VirusTotal, AbusedIPDB, FraudGuard, Auth0
+* IBM, VirusTotal, AbusedIPDB, FraudGuard, Auth0, CiscoTalos
 
 ##### URL Reputation Check
-* Virustotal, IBM, urlscan.io, GoogleSafeBrowsing, PhishTank
+* Virustotal, IBM, GoogleSafeBrowsing, PhishTank, URLscan.io, CiscoTalos
 
     For urlscan.io, whenever a url requested, screenshot of the url will be automatically taken and placed in folder. 
 
@@ -133,6 +133,25 @@ Phish Tank is used to check for phishing site.
 2. Open up `config.txt` and under `[Phish Tank]`, append API KEY after `phish_apikey = `
 3. `phish_user` should be a name describing the application use or it can be left blank. Its API supports **2000 
 requests per 5 minute**.
+
+##### [Cisco Talos:](https://talosintelligence.com/reputation_center)
+1. Check Google Chrome version from chrome settings > about Chrome
+2. Download chrome driver with correct version from [here](https://sites.google.com/a/chromium.org/chromedriver/downloads) 
+3. Open up `config.txt` and under `[Cisco Talos]`, after `cisco_drive = ` put in the directory which contains the driver.
+    For example:
+```
+cisco_drive = C:/Users/xxxx/Downloads/chromedriver.exe
+```
+
+Threat Level:
+```
+Trusted:        Displaying behavior that indicates exceptional safety
+Favorable:      Displaying behavior that indicates a level of safety
+Neutral:        Displaying neither positive or negative behavior. However, has been evaluated.
+Questionable:   Displaying behavior that may indicate risk, or could be undesirable
+Untrusted:      Displaying behavior that is exceptionally bad, malicious, or undesirable
+Unknown:        Not previously evaluated, or lacking features to assert a threat level verdict
+```
 
 ## Commands Available
 To run the script, there are a few commands available. 
