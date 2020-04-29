@@ -19,6 +19,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 #Constants
+import Screenshot
+
 NONE = "N/A"
 FG_KEYS = "fraudguard_keys.txt"
 CONFIG = "config.txt"
@@ -203,6 +205,9 @@ def virusTotalIP(ip):
     res = requests.get(api.get("vt_ip_api").format(ip), headers=vt_headers)
     checkExceptionVT(res.status_code)
     # available status: harmless, malicious, suspicious, timeout, undetected
+    if ss_mode:
+        if Screenshot.virusTotalIP(ip):
+            print("VirusTotal: Screenshot saved")
     return getResultVT(res)
 
 def virusTotalURL(url):
