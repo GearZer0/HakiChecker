@@ -12,6 +12,8 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import Screenshot
+
 delay = 15
 api={}
 
@@ -40,9 +42,8 @@ def ciscoTalos(ip):
     chrome_options.add_argument("--window-size=1325x744")
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
     driver = webdriver.Chrome(executable_path="C:/Users/***REMOVED***/Downloads/chromedriver.exe", options=chrome_options)
-    driver.implicitly_wait(5)
     driver.get("https://talosintelligence.com/reputation_center/lookup?search=" + quote(ip))
-    timeout = 5
+    timeout = 10
     element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
     WebDriverWait(driver, timeout).until(element_present)
     # print("Page Loaded: " + driver.title)

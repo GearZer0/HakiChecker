@@ -3,14 +3,25 @@ import hashlib
 import requests
 import json
 import base64
-from urllib.parse import quote
-from urllib.parse import urlencode
-from time import sleep, time
 import csv
-from requests.auth import HTTPBasicAuth
 import sys
 import os
+from urllib.parse import quote
+from time import sleep, time
+from requests.auth import HTTPBasicAuth
 from datetime import datetime
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+#Constants
+NONE = "N/A"
+FG_KEYS = "fraudguard_keys.txt"
+CONFIG = "config.txt"
 
 # SOME CONFIG, related to input output file
 result_ip_name = "result_ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for ip here
@@ -21,16 +32,21 @@ result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_
 # Specify where the output files should be stored in.
 # Currently, it will create a "Results" folder in the current directory and store inside
 output_directory = os.getcwd() + "/Results/"
+image_directory = os.getcwd() + "/Images/"
 
-#Constants
-NONE = "N/A"
-FG_KEYS = "fraudguard_keys.txt"
-CONFIG = "config.txt"
+
 hybrid_apikey = "NOT READY"
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
 api = {}
 
+# Selenium driver options
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--window-size=1325x744")
+chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+
+# Initialisation of variables
 ip_mode = False
 url_mode = False
 file_mode = False
@@ -58,7 +74,7 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-    #Create Directory for images
+    #Create Directory
     try:
         os.mkdir("Images")
         os.mkdir("Results")
@@ -69,7 +85,10 @@ def init():
 # function to save result in csv file
 def saveRecord(data, formula):
     if formula == "ip":
-        fieldnames = ["Target", "IBM", "VirusTotal", "AbusedIP", "FraudGuard", "Auth0", "Action"]
+        if ss_mode:
+            fieldnames = ["Target", "IBM", "VirusTotal", "AbusedIP", "FraudGuard", "Auth0", "CiscoTalos", "Action"]
+        else:
+            fieldnames = ["Target", "IBM", "VirusTotal", "AbusedIP", "FraudGuard", "Auth0", "Action"]
         with open(output_directory + result_ip_name, mode="a+", encoding="utf-8", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if os.stat(output_directory + result_ip_name).st_size == 0:
@@ -91,13 +110,21 @@ def saveRecord(data, formula):
             if data[5] != "0" and data[5] != NONE:
                 #malic = "Malicious"
                 nonzero += 1
+            if ss_mode and (data[6] == "Questionable" or data[6] == "Untrusted"):
+                # malic = "Malicious"
+                nonzero += 1
             if nonzero > 0:
                 malic = "To Block"
-            writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "AbusedIP":data[3],
-                             "FraudGuard":data[4], "Auth0": data[5], "Action": malic})
+
+            if ss_mode:
+                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "AbusedIP":data[3],
+                             "FraudGuard":data[4], "Auth0": data[5], "CiscoTalos": data[6],"Action": malic})
+            else:
+                writer.writerow({"Target": data[0], "IBM": data[1], "VirusTotal": data[2], "AbusedIP": data[3],
+                                 "FraudGuard": data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
         if ss_mode:
-            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank","URLScan", "URLScanUUID", "Action"]
+            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank","URLScan", "URLScanUUID", "CiscoTalos", "Action"]
         else:
             fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank", "Action"]
         with open(output_directory + result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -121,12 +148,18 @@ def saveRecord(data, formula):
             if ss_mode and data[5].startswith("0 out") == False and data[5] != NONE:
                 # malic = "Malicious"
                 nonzero += 1
+            if ss_mode and (data[7] == "Questionable" or data[6] == "Untrusted"):
+                # malic = "Malicious"
+                nonzero += 1
             if nonzero > 0:
                 malic = "To Block"
+
             if ss_mode:
-                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3], "PhishTank":data[4], "URLScan": data[5], "URLScanUUID":data[6], "Action" : malic})
+                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3],
+                                 "PhishTank":data[4], "URLScan": data[5], "URLScanUUID":data[6], "CiscoTalos":data[7], "Action": malic})
             else:
-                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3], "PhishTank":data[4], "Action" : malic})
+                writer.writerow({"Target":data[0], "IBM":data[1], "VirusTotal":data[2], "GoogleSafeBrowsing":data[3],
+                                 "PhishTank":data[4], "Action" : malic})
     elif formula == "file":
         fieldnames = ["Target", "VirusTotal"]
         with open(output_directory + result_file_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -209,7 +242,7 @@ def virusTotalFile(file):
 
     #retrieve analysis
     filehash = str(md5(file))
-    return virusTotalHash(filehash)[4]
+    return virusTotalHash(filehash)
 
 def virusTotalHash(hash):
     res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=vt_headers)
@@ -289,7 +322,7 @@ def urlscan(url):
         result = requests.get(nextpage)
         time_elapsed = time() - start
     score = result.json()['verdicts']['overall']['score']
-    with open("images/" + uuid + ".png", "wb+") as img_sc:
+    with open("Images/" + makeFileName(url) + "_urlscan.png", "wb+") as img_sc:
         try:
             img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
         except:
@@ -362,6 +395,28 @@ def phishtank(url):
         raise Exception("")
     return resp.json()['results']['in_database']
 
+# For url and ip
+def makeFileName(identity):
+    imageName = identity.split("://")
+    if len(imageName) == 2:  # Get URL name
+        imageName = imageName[1].split("/")
+    return imageName[0].split("/")[0]
+
+# works for both ip or url
+def ciscoTalos(iporurl):
+    # Initialise selenium driver
+    driver = webdriver.Chrome(executable_path=api.get("cisco_drive"), options=chrome_options)
+    driver.get(api.get("cisco_iporurl_link") + quote(iporurl))
+    timeout = 10
+    element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
+    WebDriverWait(driver, timeout).until(element_present)
+    print("Page Loaded: " + driver.title)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
+    driver.save_screenshot("Images/" + makeFileName(iporurl) + "_ciscoTalos.png")
+    driver.quit()
+    return web_reputation
+
 if __name__ == "__main__":
     start = time()
     init() #initialisation
@@ -419,6 +474,12 @@ if __name__ == "__main__":
             except:
                 ath0 = NONE
             print("Auth0: " + str(ath0))
+            if ss_mode:
+                try:
+                    ct = ciscoTalos(file_to_read)
+                except Exception as e:
+                    ct = NONE
+                print("CiscoTalos: " + ct)
         elif surl_mode:
             ok = False
             try:
@@ -455,6 +516,11 @@ if __name__ == "__main__":
             print("PhishTank: " + str(pt))
             if ss_mode:
                 try:
+                    ct = ciscoTalos(file_to_read)
+                except Exception as e:
+                    ct = NONE
+                print("CiscoTalos: " + ct + "\nScreens")
+                try:
                     usc = urlscan(file_to_read)
                     uscuuid = usc[1]
                     usc = usc[0]
@@ -462,6 +528,7 @@ if __name__ == "__main__":
                     usc = NONE
                     uscuuid = NONE
                 print("URLscan: " + usc + "\nScreenshot saved: " + uscuuid)
+
         elif shash_mode:
             ok = False
             hv = virusTotalHash(file_to_read)
@@ -506,6 +573,12 @@ if __name__ == "__main__":
                     except:
                         ath0 = NONE
                     print("Auth0: " + str(ath0))
+                    if ss_mode:
+                        try:
+                            ct = ciscoTalos(ip)
+                        except Exception as e:
+                            ct = NONE
+                        print("CiscoTalos: " + ct)
                     dataset = []
                     dataset.append(ip)
                     dataset.append(ibm_rec)
@@ -513,6 +586,8 @@ if __name__ == "__main__":
                     dataset.append(abip)
                     dataset.append(fg)
                     dataset.append(ath0)
+                    if ss_mode:
+                        dataset.append(ct)
                     saveRecord(dataset, "ip")
             elif url_mode == True:
                 for url in file_data:
@@ -560,6 +635,11 @@ if __name__ == "__main__":
                             usc = NONE
                             uscuuid = NONE
                         print("URLscan: " + usc)
+                        try:
+                            ct = ciscoTalos(url)
+                        except Exception as e:
+                            ct = NONE
+                        print("CiscoTalos: " + ct)
                     dataset = []
                     dataset.append(url)
                     dataset.append(ibm_rec)
@@ -569,6 +649,7 @@ if __name__ == "__main__":
                     if ss_mode:
                         dataset.append(usc)
                         dataset.append(uscuuid)
+                        dataset.append(ct)
                     saveRecord(dataset, "url")
             elif file_mode == True:
                 for a_file in file_data:
