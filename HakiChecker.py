@@ -242,7 +242,7 @@ def virusTotalFile(file):
 
     #retrieve analysis
     filehash = str(md5(file))
-    return virusTotalHash(filehash)
+    return virusTotalHash(filehash)[4]
 
 def virusTotalHash(hash):
     res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=vt_headers)
@@ -407,10 +407,10 @@ def ciscoTalos(iporurl):
     # Initialise selenium driver
     driver = webdriver.Chrome(executable_path=api.get("cisco_drive"), options=chrome_options)
     driver.get(api.get("cisco_iporurl_link") + quote(iporurl))
-    timeout = 10
+    timeout = 15
     element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
     WebDriverWait(driver, timeout).until(element_present)
-    print("Page Loaded: " + driver.title)
+    # print("Page Loaded: " + driver.title)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
     driver.save_screenshot("Images/" + makeFileName(iporurl) + "_ciscoTalos.png")
