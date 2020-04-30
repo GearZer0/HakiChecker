@@ -58,6 +58,7 @@ sip_mode = False
 surl_mode = False
 shash_mode = False
 ss_mode = False
+mode = NONE
 
 #initialise all the api keys and apis from config.txt
 def init():
@@ -79,6 +80,10 @@ def init():
     #Create Directory
     try:
         os.mkdir("Images")
+        os.mkdir("Images/ip")
+        os.mkdir("Images/url")
+        os.mkdir("Images/hash")
+        os.mkdir("Images/file")
         os.mkdir("Results")
         #os.mkdir("images_hybrid")
     except:
@@ -201,15 +206,18 @@ def checkExceptionVT(code):
     elif code != 200:
         raise Exception("")
 
+def getScreenshotVT(obj):
+    if ss_mode:
+        if ss.virusTotal(obj):
+            print("VirusTotal: Screenshot saved")
+        else:
+            print("VirusTotal: Failed to save screenshot")
+
 def virusTotalIP(ip):
     res = requests.get(api.get("vt_ip_api").format(ip), headers=vt_headers)
     checkExceptionVT(res.status_code)
     # available status: harmless, malicious, suspicious, timeout, undetected
-    if ss_mode:
-        if Screenshot.virusTotalIP(ip):
-            print("VirusTotal: Screenshot saved")
-        else:
-            print("VirusTotal: Failed to save screenshot")
+    getScreenshotVT(ip)
     return getResultVT(res)
 
 def virusTotalURL(url):
@@ -229,11 +237,7 @@ def virusTotalURL(url):
             headers=vt_headers)
         sleep(3)
     #available status: harmless, malicious, suspicious, timeout, undetected
-    if ss_mode:
-        if Screenshot.virusTotalURL(url):
-            print("VirusTotal: Screenshot saved")
-        else:
-            print("VirusTotal: Failed to save screenshot")
+    getScreenshotVT(url)
     return getResultVT(resp)
 
 def virusTotalFile(file):
@@ -251,12 +255,14 @@ def virusTotalFile(file):
         upload_url = res.json()['data']
         res = requests.post(upload_url, headers=vt_headers, files=data)
     checkExceptionVT(res.status_code)
-
     #retrieve analysis
     filehash = str(md5(file))
-    return virusTotalHash(filehash)[4]
+    return virusTotalHash([filehash,file])[4]
 
 def virusTotalHash(hash):
+    getScreenshotVT(hash)
+    if mode == 'file':
+        hash = hash[0]
     res = requests.get(api.get("vt_file_api") + '/{}'.format(hash), headers=vt_headers)
     checkExceptionVT(res.status_code)
     rate = getResultVT(res)
@@ -334,7 +340,7 @@ def urlscan(url):
         result = requests.get(nextpage)
         time_elapsed = time() - start
     score = result.json()['verdicts']['overall']['score']
-    with open("Images/" + makeFileName(url) + "_urlscan.png", "wb+") as img_sc:
+    with open("Images/" + mode + "/" + ss.makeFileName(url) + ".png", "wb+") as img_sc:
         try:
             img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
         except:
@@ -407,27 +413,9 @@ def phishtank(url):
         raise Exception("")
     return resp.json()['results']['in_database']
 
-# For url and ip
-def makeFileName(identity):
-    imageName = identity.split("://")
-    if len(imageName) == 2:  # Get URL name
-        imageName = imageName[1].split("/")
-    return imageName[0].split("/")[0]
 
-# works for both ip or url
-def ciscoTalos(iporurl):
-    # Initialise selenium driver
-    driver = webdriver.Chrome(executable_path=api.get("cisco_drive"), options=chrome_options)
-    driver.get(api.get("cisco_iporurl_link") + quote(iporurl))
-    timeout = 15
-    element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
-    WebDriverWait(driver, timeout).until(element_present)
-    # print("Page Loaded: " + driver.title)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
-    driver.save_screenshot("Images/" + makeFileName(iporurl) + "_ciscoTalos.png")
-    driver.quit()
-    return web_reputation
+
+
 
 if __name__ == "__main__":
     start = time()
@@ -438,11 +426,15 @@ if __name__ == "__main__":
         ok = False
         if sys.argv[1] == "-url":
             url_mode = True
+            mode = 'url'
         elif sys.argv[1] == "-ip":
+            mode = 'ip'
             ip_mode = True
         elif sys.argv[1] == "-file":
+            mode = 'file'
             file_mode = True
         elif sys.argv[1] == "-hash":
+            mode = 'hash'
             hash_mode = True
         elif sys.argv[1] == "-shash":
             shash_mode = True
@@ -453,6 +445,7 @@ if __name__ == "__main__":
         file_to_read = sys.argv[2]
         if len(sys.argv) == 4 and sys.argv[3] == "-ss":
             ss_mode = True
+            ss = Screenshot.Screenshot(mode, api)
         ok = True
 
         if sip_mode:
@@ -488,7 +481,7 @@ if __name__ == "__main__":
             print("Auth0: " + str(ath0))
             if ss_mode:
                 try:
-                    ct = ciscoTalos(file_to_read)
+                    ct = ss.ciscoTalos(file_to_read)
                 except Exception as e:
                     ct = NONE
                 print("CiscoTalos: " + ct)
@@ -528,7 +521,7 @@ if __name__ == "__main__":
             print("PhishTank: " + str(pt))
             if ss_mode:
                 try:
-                    ct = ciscoTalos(file_to_read)
+                    ct = ss.ciscoTalos(file_to_read)
                 except Exception as e:
                     ct = NONE
                 print("CiscoTalos: " + ct + "\nScreens")
@@ -587,7 +580,7 @@ if __name__ == "__main__":
                     print("Auth0: " + str(ath0))
                     if ss_mode:
                         try:
-                            ct = ciscoTalos(ip)
+                            ct = ss.ciscoTalos(ip)
                         except Exception as e:
                             ct = NONE
                         print("CiscoTalos: " + ct)
@@ -648,7 +641,7 @@ if __name__ == "__main__":
                             uscuuid = NONE
                         print("URLscan: " + usc)
                         try:
-                            ct = ciscoTalos(url)
+                            ct = ss.ciscoTalos(url)
                         except Exception as e:
                             ct = NONE
                         print("CiscoTalos: " + ct)

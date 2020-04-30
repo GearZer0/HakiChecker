@@ -1,8 +1,11 @@
+drive = C:/Users/***REMOVED***/Downloads/chromedriver.exe
+
 [Virus Total]
 vt_apikey =
 vt_url_api = https://www.virustotal.com/api/v3/urls/{}
 vt_file_api = https://www.virustotal.com/api/v3/files
 vt_ip_api = https://www.virustotal.com/api/v3/ip_addresses/{}
+vt_ss_link = https://www.virustotal.com/gui/{identifier}/{target}/detection
 
 [AbuseIPDB]
 abip_apikey =
@@ -40,5 +43,4 @@ phish_user =
 phish_api = https://checkurl.phishtank.com/checkurl/
 
 [Cisco Talos]
-cisco_drive =
 cisco_iporurl_link = https://talosintelligence.com/reputation_center/lookup?search=

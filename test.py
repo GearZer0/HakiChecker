@@ -58,6 +58,7 @@ def ciscoTalos(ip):
 
 if __name__ == "__main__":
     init()
+    ss = Screenshot.Screenshot('url', api)
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
@@ -66,7 +67,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = Screenshot.virusTotalURL(ip)
+            ct = ss.ciscoTalos(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
