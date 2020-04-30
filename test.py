@@ -66,8 +66,13 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = ciscoTalos(ip)
+            ct = Screenshot.virusTotalURL(ip)
+        except TimeoutException as e:
+            print("Time out")
+            ct = "N/A"
         except Exception as e:
             print(e)
             ct = "N/A"
-        print("CiscoTalos: " + ct)
+            pass
+        pass
+        print("VirusTotal: " + str(ct))

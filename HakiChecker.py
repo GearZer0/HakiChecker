@@ -208,6 +208,8 @@ def virusTotalIP(ip):
     if ss_mode:
         if Screenshot.virusTotalIP(ip):
             print("VirusTotal: Screenshot saved")
+        else:
+            print("VirusTotal: Failed to save screenshot")
     return getResultVT(res)
 
 def virusTotalURL(url):
@@ -227,6 +229,11 @@ def virusTotalURL(url):
             headers=vt_headers)
         sleep(3)
     #available status: harmless, malicious, suspicious, timeout, undetected
+    if ss_mode:
+        if Screenshot.virusTotalURL(url):
+            print("VirusTotal: Screenshot saved")
+        else:
+            print("VirusTotal: Failed to save screenshot")
     return getResultVT(resp)
 
 def virusTotalFile(file):
