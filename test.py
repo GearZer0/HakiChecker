@@ -1,3 +1,5 @@
+import json
+from time import time, sleep
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -35,26 +37,31 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-def ciscoTalos(ip):
-    # Initialise selenium driver
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--window-size=1325x744")
-    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
-    driver = webdriver.Chrome(executable_path="C:/Users/***REMOVED***/Downloads/chromedriver.exe", options=chrome_options)
-    driver.get("https://talosintelligence.com/reputation_center/lookup?search=" + quote(ip))
-    timeout = 10
-    element_present = EC.presence_of_element_located((By.ID, 'email-data-wrapper'))
-    WebDriverWait(driver, timeout).until(element_present)
-    # print("Page Loaded: " + driver.title)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
-    imageName = ip.split("://")
-    if len(imageName) == 2:
-        imageName = imageName[1].split("/")
-    driver.save_screenshot("Images/" + imageName[0] + "_ciscoTalos.png")
-    driver.quit()
-    return web_reputation
+def urlscan(url):
+    headers = {"API-Key": api.get("urlscan_apikey")}
+    data = {"url": url}
+    resp = requests.post(api.get("urlscan_api"), data=data, headers=headers).text
+    uuid = json.loads(resp)['uuid']
+    nextpage = json.loads(resp)['api']
+    result = requests.get(nextpage)
+    start = time()
+    time_elapsed = 0
+    #repeat until url has finished scanning. Max time is 65seconds
+    while result.status_code == 404 and time_elapsed < 65:
+        sleep(5)
+        result = requests.get(nextpage)
+        time_elapsed = time() - start
+    if ss.urlscan(url, uuid):
+        print("Screenshot done")
+    score = result.json()['verdicts']['overall']['score']
+
+    with open("Images/" + 'url' + "/" + ss.makeFileName(url) + ".png", "wb+") as img_sc:
+        try:
+            img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
+            print("URLscan: URL Screenshot saved")
+        except:
+            print("URLscan: Failed to save URL screenshot")
+    return [str(score) + " out of 100", uuid]
 
 if __name__ == "__main__":
     init()
@@ -67,7 +74,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = ss.ciscoTalos(ip)
+            ct = urlscan(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"

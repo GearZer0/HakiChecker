@@ -5,22 +5,56 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from urllib.parse import quote
+from urllib.parse import quote, quote_plus
 import base64
 import sys
 import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--window-size=1325x744")
-chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+# chrome_options.add_argument("--headless")
+# chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+chrome_options.add_argument('--start-maximized')
 
 class Screenshot(object):
 
     def __init__(self, mode, api):
         self.mode = mode
         self.api = api
+
+    def urlscan(self, url, uuid):
+        # url = uuid.split("://", 2)
+        # if len(url) == 2:
+        #     url = url[1]
+        # else:
+        #     url = url[0]
+        # url = quote_plus(url)
+        # print(url)
+        driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+        driver.get("https://urlscan.io/result/{}".format(uuid))
+        timeout = 20
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'container'))
+        WebDriverWait(driver, timeout).until(element_present)
+        # soup = BeautifulSoup(driver.page_source, 'html.parser')
+        # res = soup.findAll('td')
+        # if len(res) != 0:
+        #     print(res[1].a)
+        #     res = requests.get("https://urlscan.io" + res[1].a['href'])
+        #     driver.get("https://urlscan.io" + res[1].a['href'])
+        
+        # ele = driver.find_element_by_class_name('container')
+        # total_height = ele.size["height"] + 1000
+        # print(total_height)
+        # driver.set_window_size(1920, total_height)
+
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(url) + "_urlscan.png")
+            driver.quit()
+            return True
+        except:
+            driver.quit()
+            return False
+
 
     def virusTotal(self, obj):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
