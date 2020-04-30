@@ -10,20 +10,8 @@ from urllib.parse import quote
 from time import sleep, time
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-#Constants
 import Screenshot
-
-NONE = "N/A"
-FG_KEYS = "fraudguard_keys.txt"
-CONFIG = "config.txt"
 
 # SOME CONFIG, related to input output file
 result_ip_name = "result_ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for ip here
@@ -32,11 +20,13 @@ result_file_name = "result_file{}.csv".format(datetime.now().strftime("%Y-%m-%d_
 result_hash_name = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M")) #save result for hash here
 
 # Specify where the output files should be stored in.
-# Currently, it will create a "Results" folder in the current directory and store inside
 output_directory = os.getcwd() + "/Results/"
 image_directory = os.getcwd() + "/Images/"
 
-
+# Constants
+NONE = "N/A"
+FG_KEYS = "fraudguard_keys.txt"
+CONFIG = "config.txt"
 hybrid_apikey = "NOT READY"
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
@@ -48,17 +38,10 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=1325x744")
 chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
 
-# Initialisation of variables
-ip_mode = False
-url_mode = False
-file_mode = False
-hash_mode = False
-file_to_read = None
-sip_mode = False
-surl_mode = False
-shash_mode = False
-ss_mode = False
+# Initialisation of modes
 mode = NONE
+ss_mode = False
+single_mode = False
 
 #initialise all the api keys and apis from config.txt
 def init():
@@ -343,8 +326,9 @@ def urlscan(url):
     with open("Images/" + mode + "/" + ss.makeFileName(url) + ".png", "wb+") as img_sc:
         try:
             img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
+            print("URLscan: URL Screenshot saved")
         except:
-            pass
+            print("URLscan: Failed to save URL screenshot")
     return [str(score) + " out of 100", uuid]
 
 def checkExceptionGS(code):
@@ -414,8 +398,157 @@ def phishtank(url):
     return resp.json()['results']['in_database']
 
 
+def modeIP(ip):
+    print("---------------------------------------\n" + ip + "\n---------------------------------------")
+    try:
+        vt = virusTotalIP(ip)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        vt = NONE
+    except:
+        vt = NONE
+    print("VirusTotal: " + vt)
+    try:
+        abip = abusedIP(ip)
+    except:
+        abip = NONE
+    print("Abused IP: " + abip)
+    try:
+        fg = fraudGuard(ip)
+    except:
+        fg = NONE
+    print("FraudGuard: " + fg)
+    try:
+        ibm_rec = IBM_IP(ip)
+    except:
+        ibm_rec = NONE
+    print("IBM: " + ibm_rec)
+    try:
+        ath0 = auth0(ip)
+    except:
+        ath0 = NONE
+    print("Auth0: " + str(ath0))
+    if ss_mode:
+        try:
+            ct = ss.ciscoTalos(ip)
+        except Exception as e:
+            ct = NONE
+        print("CiscoTalos: " + ct)
+    dataset = []
+    dataset.append(ip)
+    dataset.append(ibm_rec)
+    dataset.append(vt)
+    dataset.append(abip)
+    dataset.append(fg)
+    dataset.append(ath0)
+    if ss_mode:
+        dataset.append(ct)
+    return dataset
 
+def modeURL(url):
+    print("---------------------------------------\n" + url + "\n---------------------------------------")
+    try:
+        vt = virusTotalURL(url)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        vt = NONE
+    except:
+        vt = NONE
+    print("VirusTotal: " + vt)
+    try:
+        ibm_rec = IBM_URL(url)
+    except:
+        ibm_rec = NONE
+    print("IBM: " + ibm_rec)
+    try:
+        gsb = googleSafe(url)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        gsb = NONE
+    except:
+        gsb = NONE
+    print("GoogleSafeBrowsing: " + gsb)
+    try:
+        pt = phishtank(url)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        pt = NONE
+    except:
+        pt = NONE
+    print("PhishTank: " + str(pt))
+    if ss_mode:
+        try:
+            usc = urlscan(url)
+            uscuuid = usc[1]
+            usc = usc[0]
+        except:
+            usc = NONE
+            uscuuid = NONE
+        print("URLscan: " + usc)
+        try:
+            ct = ss.ciscoTalos(url)
+        except Exception as e:
+            ct = NONE
+        print("CiscoTalos: " + ct)
+    dataset = []
+    dataset.append(url)
+    dataset.append(ibm_rec)
+    dataset.append(vt)
+    dataset.append(gsb)
+    dataset.append(pt)
+    if ss_mode:
+        dataset.append(usc)
+        dataset.append(uscuuid)
+        dataset.append(ct)
+    return dataset
 
+def modeHash(a_hash):
+    print("---------------------------------------\nChecking:   " + a_hash)
+    try:
+        res = virusTotalHash(a_hash)
+        print("VirusTotal: " + str(res[4]))
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        print("VirusTotal: N/A")
+        res = [a_hash, NONE, NONE, NONE, NONE]
+    except:
+        res = [a_hash, NONE, NONE, NONE, NONE]
+        print("VirusTotal: N/A")
+    return res
+
+def modeFile(a_file):
+    print("---------------------------------------\nChecking:   " + a_file)
+    try:
+        res = virusTotalFile(a_file)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        res = NONE
+    except:
+        res = NONE
+    print("VirusTotal: " + str(res))
+    dataset = []
+    dataset.append(a_file)
+    dataset.append(res)
+    return dataset
+
+def help():
+    # Help
+    print("Wrong Syntax. Please refer below for correct syntax.")
+    print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
+    print("Usage: " + sys.argv[0] + " -ip list.txt")
+    print("Usage: " + sys.argv[0] + " -surl xxxxxx")
+    print("Usage: " + sys.argv[0] + " -surl xxxxxx -ss")
+    print("Usage: " + sys.argv[0] + " -url list.txt")
+    print("Usage: " + sys.argv[0] + " -url list.txt -ss")
+    print("Usage: " + sys.argv[0] + " -shash xxxxx")
+    print("Usage: " + sys.argv[0] + " -hash list.txt")
+    print("Usage: " + sys.argv[0] + " -file list.txt")
 
 if __name__ == "__main__":
     start = time()
@@ -423,289 +556,76 @@ if __name__ == "__main__":
     #print(hybrid("https://chase.com.onlinesecuremyaccount.locked.situstaruhanqq820.com/"))
 
     if len(sys.argv) == 3 or (len(sys.argv) == 4 and sys.argv[3] == "-ss"):
-        ok = False
+        file_to_read = sys.argv[2]
         if sys.argv[1] == "-url":
-            url_mode = True
             mode = 'url'
         elif sys.argv[1] == "-ip":
             mode = 'ip'
-            ip_mode = True
         elif sys.argv[1] == "-file":
             mode = 'file'
-            file_mode = True
         elif sys.argv[1] == "-hash":
             mode = 'hash'
-            hash_mode = True
         elif sys.argv[1] == "-shash":
-            shash_mode = True
+            mode = 'hash'
         elif sys.argv[1] == "-sip":
-            sip_mode = True
+            mode = 'ip'
         elif sys.argv[1] == "-surl":
-            surl_mode = True
-        file_to_read = sys.argv[2]
+            mode = 'url'
+        else: # Incorrect command line arg
+            help()
+            exit()
+
+        # Check for single mode and screenshot mode
+        if '-s' in sys.argv[1]:
+            single_mode = True
         if len(sys.argv) == 4 and sys.argv[3] == "-ss":
             ss_mode = True
             ss = Screenshot.Screenshot(mode, api)
-        ok = True
 
-        if sip_mode:
-            ok = False
-            try:
-                vt = virusTotalIP(file_to_read)
-            except Exception as error:
-                if str(error) != "":
-                    print(str(error))
-                vt = NONE
-            except:
-                vt = NONE
-            print("VirusTotal: " + vt)
-            try:
-                abip = abusedIP(file_to_read)
-            except:
-                abip = NONE
-            print("Abused IP: " + abip)
-            try:
-                fg = fraudGuard(file_to_read)
-            except:
-                fg = NONE
-            print("FraudGuard: " + fg)
-            try:
-                ibm_rec = IBM_IP(file_to_read)
-            except:
-                ibm_rec = NONE
-            print("IBM: " + ibm_rec)
-            try:
-                ath0 = auth0(file_to_read)
-            except:
-                ath0 = NONE
-            print("Auth0: " + str(ath0))
-            if ss_mode:
-                try:
-                    ct = ss.ciscoTalos(file_to_read)
-                except Exception as e:
-                    ct = NONE
-                print("CiscoTalos: " + ct)
-        elif surl_mode:
-            ok = False
-            try:
-                vt = virusTotalURL(file_to_read)
-            except Exception as error:
-                if str(error) != "":
-                    print(str(error))
-                vt = NONE
-            except:
-                vt = NONE
-            print("VirusTotal: " + vt)
-            try:
-                ibm_rec = IBM_URL(file_to_read)
-            except:
-                ibm_rec = NONE
-            print("IBM: " + ibm_rec)
-            try:
-                gsb = googleSafe(file_to_read)
-            except Exception as error:
-                if str(error) != "":
-                    print(str(error))
-                gsb = NONE
-            except:
-                gsb = NONE
-            print("GoogleSafeBrowsing: " + gsb)
-            try:
-                pt = phishtank(file_to_read)
-            except Exception as error:
-                if str(error) != "":
-                    print(str(error))
-                pt = NONE
-            except:
-                pt = NONE
-            print("PhishTank: " + str(pt))
-            if ss_mode:
-                try:
-                    ct = ss.ciscoTalos(file_to_read)
-                except Exception as e:
-                    ct = NONE
-                print("CiscoTalos: " + ct + "\nScreens")
-                try:
-                    usc = urlscan(file_to_read)
-                    uscuuid = usc[1]
-                    usc = usc[0]
-                except:
-                    usc = NONE
-                    uscuuid = NONE
-                print("URLscan: " + usc + "\nScreenshot saved: " + uscuuid)
+        if single_mode:
+            if mode == 'ip':
+                modeIP(file_to_read)
+            elif mode == 'url':
+                modeURL(file_to_read)
+            elif mode == 'hash':
+                res = modeHash(file_to_read)
+                print("md5: " + res[1])
+                print("sha256: " + res[2])
+                print("sha1: " + res[3])
 
-        elif shash_mode:
-            ok = False
-            hv = virusTotalHash(file_to_read)
-            print("md5: " + hv[1])
-            print("sha256: " + hv[2])
-            print("sha1: " + hv[3])
-            print("score: " + hv[4])
-
-        if ok == True:
+        else: # multiple mode
             file_data = open(file_to_read, 'r').read().split('\n')
-            if ip_mode == True:
+            if mode == 'ip':
                 for ip in file_data:
                     if ip == "":
                         continue
-                    print("---------------------------------------\n" + ip + "\n---------------------------------------")
-                    try:
-                        vt = virusTotalIP(ip)
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        vt = NONE
-                    except:
-                        vt = NONE
-                    print("VirusTotal: " + vt)
-                    try:
-                        abip = abusedIP(ip)
-                    except:
-                        abip = NONE
-                    print("Abused IP: " + abip)
-                    try:
-                        fg = fraudGuard(ip)
-                    except:
-                        fg = NONE
-                    print("FraudGuard: " + fg)
-                    try:
-                        ibm_rec = IBM_IP(ip)
-                    except:
-                        ibm_rec = NONE
-                    print("IBM: " + ibm_rec)
-                    try:
-                        ath0 = auth0(ip)
-                    except:
-                        ath0 = NONE
-                    print("Auth0: " + str(ath0))
-                    if ss_mode:
-                        try:
-                            ct = ss.ciscoTalos(ip)
-                        except Exception as e:
-                            ct = NONE
-                        print("CiscoTalos: " + ct)
-                    dataset = []
-                    dataset.append(ip)
-                    dataset.append(ibm_rec)
-                    dataset.append(vt)
-                    dataset.append(abip)
-                    dataset.append(fg)
-                    dataset.append(ath0)
-                    if ss_mode:
-                        dataset.append(ct)
+                    dataset = modeIP(ip)
                     saveRecord(dataset, "ip")
-            elif url_mode == True:
+            elif mode == 'url':
                 for url in file_data:
                     if url == "":
                         continue
-                    print("---------------------------------------\n" + url + "\n---------------------------------------")
-                    try:
-                        vt = virusTotalURL(url)
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        vt = NONE
-                    except:
-                        vt = NONE
-                    print("VirusTotal: " + vt)
-                    try:
-                        ibm_rec = IBM_URL(url)
-                    except:
-                        ibm_rec = NONE
-                    print("IBM: " + ibm_rec)
-                    try:
-                        gsb = googleSafe(url)
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        gsb = NONE
-                    except:
-                        gsb = NONE
-                    print("GoogleSafeBrowsing: " + gsb)
-                    try:
-                        pt = phishtank(url)
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        pt = NONE
-                    except:
-                        pt = NONE
-                    print("PhishTank: " + str(pt))
-                    if ss_mode:
-                        try:
-                            usc = urlscan(url)
-                            uscuuid = usc[1]
-                            usc = usc[0]
-                        except:
-                            usc = NONE
-                            uscuuid = NONE
-                        print("URLscan: " + usc)
-                        try:
-                            ct = ss.ciscoTalos(url)
-                        except Exception as e:
-                            ct = NONE
-                        print("CiscoTalos: " + ct)
-                    dataset = []
-                    dataset.append(url)
-                    dataset.append(ibm_rec)
-                    dataset.append(vt)
-                    dataset.append(gsb)
-                    dataset.append(pt)
-                    if ss_mode:
-                        dataset.append(usc)
-                        dataset.append(uscuuid)
-                        dataset.append(ct)
+                    dataset = modeURL(url)
                     saveRecord(dataset, "url")
-            elif file_mode == True:
+            elif mode == 'file':
                 for a_file in file_data:
                     startFileTime = time()
                     if a_file == "":
                         continue
-                    print("---------------------------------------\nChecking:   " + a_file)
-                    try:
-                        res = virusTotalFile(a_file)
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        res = NONE
-                    except:
-                        res = NONE
-                    print("VirusTotal: " + str(res))
-                    print("Time Taken: " + str(round(time() - startFileTime, 2)))
-                    dataset = []
-                    dataset.append(a_file)
-                    dataset.append(res)
+                    dataset = modeFile(a_file)
                     saveRecord(dataset, "file")
+                    print("Time Taken: " + str(round(time() - startFileTime, 2)))
 
-            elif hash_mode == True:
+            elif mode == 'hash':
                 for a_hash in file_data:
                     if a_hash == "":
                         continue
-                    print("---------------------------------------\nChecking:   " + a_hash)
-                    try:
-                        res = virusTotalHash(a_hash)
-                        saveRecord(res, "hash")
-                        print("VirusTotal: " + str(res[4]))
-                    except Exception as error:
-                        if str(error) != "":
-                            print(str(error))
-                        print("VirusTotal: N/A")
-                        res = []
-                    except:
-                        res = []
-                        print("VirusTotal: N/A")
+                    res = modeHash(a_hash)
+                    saveRecord(res, "hash")
+
             print("---------------------------------------\nTotal Time Elapsed: " + str(round(time() - start, 2)))
 
-    else:
-        #Help
-        print("Wrong Syntax. Please refer below for correct syntax.")
-        print("Usage: " + sys.argv[0] + " -sip xx.xx.xx.xx")
-        print("Usage: " + sys.argv[0] + " -ip list.txt")
-        print("Usage: " + sys.argv[0] + " -surl xxxxxx")
-        print("Usage: " + sys.argv[0] + " -surl xxxxxx -ss")
-        print("Usage: " + sys.argv[0] + " -url list.txt")
-        print("Usage: " + sys.argv[0] + " -url list.txt -ss")
-        print("Usage: " + sys.argv[0] + " -shash xxxxx")
-        print("Usage: " + sys.argv[0] + " -hash list.txt")
-        print("Usage: " + sys.argv[0] + " -file list.txt")
+    else: # Incorrect command line arg
+        help()
+        exit()
 
