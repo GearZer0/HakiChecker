@@ -12,9 +12,9 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 chrome_options = Options()
-chrome_options.add_argument("--window-size=1325x744")
-# chrome_options.add_argument("--headless")
-# chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--headless")
+chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
 
 class Screenshot(object):
 
