@@ -12,7 +12,7 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 chrome_options = Options()
-chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--window-size=1680x1050")
 chrome_options.add_argument("--headless")
 chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
 
@@ -21,6 +21,21 @@ class Screenshot(object):
     def __init__(self, mode, api):
         self.mode = mode
         self.api = api
+
+    def googleSafe(self, url):
+        driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+        driver.get("https://transparencyreport.google.com/safe-browsing/search?url={}&hl=en".format(url))
+        timeout = 15
+        element_present = EC.presence_of_element_located((By.TAG_NAME, 'data-tile'))
+        WebDriverWait(driver, timeout).until(element_present)
+        driver.execute_script("window.scrollTo(0, 100)")
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(url) + "_googleSafe.png")
+            driver.quit()
+            return True
+        except:
+            driver.quit()
+            return False
 
     def fraudguard(self, ip):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)

@@ -39,39 +39,33 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
+def checkExceptionGS(code):
+    if code == 403:
+        raise Exception("ERROR: Please verify API KEY!")
+    elif code == 429:
+        raise Exception("ERROR: Requests Exceeded!")
+    elif code != 200:
+        raise Exception("")
 
-def getFGKey():
-    keys = open(FG_KEYS, 'r').read().split('\n')
-    if keys == "":
-        print("Are you sure about FG Keys availability?")
-    return keys[0]
-
-def removeOldFGKey(get_key):
-    keys = open(FG_KEYS, 'r').read().split('\n')
-    open(FG_KEYS, 'w+').close()
-    with open(FG_KEYS, 'a+') as fl:
-        for i in keys:
-            if i != get_key:
-                fl.write(i + "\n")
-        fl.write(get_key + "\n")
-
-def fraudGuard(ip):
-    ss.fraudguard(ip)
-    fg_api = api.get("fg_api") + ip
-    get_key = getFGKey()
-    username = get_key.split(':')[0]
-    password = get_key.split(':')[1]
-    resp = requests.get(fg_api, verify=True, auth=HTTPBasicAuth(username, password))
-    if resp.status_code == 429:
-        print("API limit reached, changing username:password")
-        removeOldFGKey(get_key)
-        return fraudGuard(ip)
-    rate = json.loads(resp.text)['risk_level']
-    return rate + " out of 5"
+def googleSafe(url):
+    ss.googleSafe(url)
+    data = {
+        "client":{"clientId":"ProjectAuto", "clientVersion":"1.5.2"},
+        "threatInfo":{
+            "threatTypes":["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            "platformTypes":["WINDOWS"],
+            "threatEntryTypes":["URL"],
+            "threatEntries":[{"url": url}]}}
+    resp = requests.post(api.get("google_api")+api.get("google_apikey"),data=json.dumps(data))
+    checkExceptionGS(resp.status_code)
+    if "matches" in resp.json().keys():
+        return resp.json()["matches"][0]["threatType"]
+    else:
+        return "Safe"
 
 if __name__ == "__main__":
     init()
-    ss = Screenshot.Screenshot('ip', api)
+    ss = Screenshot.Screenshot('url', api)
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
@@ -80,7 +74,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = fraudGuard(ip)
+            ct = googleSafe(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"

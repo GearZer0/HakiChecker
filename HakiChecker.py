@@ -367,6 +367,11 @@ def checkExceptionGS(code):
         raise Exception("")
 
 def googleSafe(url):
+    if ss_mode:
+        if ss.googleSafe(url):
+            print("GoogleSafeBrowsing: Screenshot saved")
+        else:
+            print("GoogleSafeBrowsing: Failed to save screenshot")
     data = {
         "client":{"clientId":"ProjectAuto", "clientVersion":"1.5.2"},
         "threatInfo":{
