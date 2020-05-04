@@ -322,13 +322,17 @@ def urlscan(url):
         sleep(5)
         result = requests.get(nextpage)
         time_elapsed = time() - start
+    if ss.urlscan(url, uuid):
+        print("URLscan: Screenshot saved")
+    else:
+        print("VirusTotal: Failed to save screenshot")
     score = result.json()['verdicts']['overall']['score']
     with open("Images/" + mode + "/" + ss.makeFileName(url) + ".png", "wb+") as img_sc:
         try:
             img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
-            print("URLscan: URL Screenshot saved")
+            print("URLscan: Screenshot of target URL saved")
         except:
-            print("URLscan: Failed to save URL screenshot")
+            print("URLscan: Failed to save screenshot of target URL")
     return [str(score) + " out of 100", uuid]
 
 def checkExceptionGS(code):
