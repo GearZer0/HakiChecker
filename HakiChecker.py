@@ -32,12 +32,6 @@ vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
 api = {}
 
-# Selenium driver options
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--window-size=1325x744")
-chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
-
 # Initialisation of modes
 mode = NONE
 ss_mode = False

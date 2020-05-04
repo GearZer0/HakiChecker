@@ -1,16 +1,13 @@
-from time import sleep
-
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from urllib.parse import quote, quote_plus
+from urllib.parse import quote
 import base64
-import sys
-import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+# Selenium driver options
 chrome_options = Options()
 chrome_options.add_argument("--window-size=1680x1050")
 chrome_options.add_argument("--headless")
@@ -28,7 +25,6 @@ class Screenshot(object):
         timeout = 15
         element_present = EC.presence_of_element_located((By.TAG_NAME, 'data-tile'))
         WebDriverWait(driver, timeout).until(element_present)
-        driver.execute_script("window.scrollTo(0, 100)")
         try:
             driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(url) + "_googleSafe.png")
             driver.quit()
@@ -45,7 +41,7 @@ class Screenshot(object):
         WebDriverWait(driver, timeout).until(element_present)
         driver.execute_script("window.scrollTo(0, 500)")
         try:
-            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_abusedIP.png")
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_fraudguard.png")
             driver.quit()
             return True
         except:
@@ -66,6 +62,7 @@ class Screenshot(object):
             driver.quit()
             return False
 
+    # for url and ip
     def IBM(self, obj):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
         driver.get("https://exchange.xforce.ibmcloud.com/search/{}".format(quote(obj)))
@@ -88,11 +85,10 @@ class Screenshot(object):
         riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
         try:
             driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(obj) + "_ibm.png")
-            driver.quit()
             print("IBM: Screenshot saved")
         except:
-            driver.quit()
             print("IBM: Failed to save screenshot")
+        driver.quit()
         return riskLevel
 
     def urlscan(self, url, uuid):
@@ -155,7 +151,11 @@ class Screenshot(object):
         # print("Page Loaded: " + driver.title)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
-        driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(iporurl) + "_ciscoTalos.png")
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(iporurl) + "_ciscoTalos.png")
+            print("CiscoTalos: Screenshot Saved")
+        except:
+            print("CiscoTalos: Failed to save screenshot")
         driver.quit()
         return web_reputation
 
