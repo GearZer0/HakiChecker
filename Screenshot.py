@@ -13,8 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 chrome_options = Options()
 chrome_options.add_argument("--window-size=1325x744")
-chrome_options.add_argument("--headless")
-chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
+# chrome_options.add_argument("--headless")
+# chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # for debugging comment this out
 
 class Screenshot(object):
 
@@ -31,25 +31,25 @@ class Screenshot(object):
         # terms and condition + guest login
         driver.find_element_by_xpath("//input[@ng-model='termsCheckbox']").click()
         driver.find_element_by_xpath("//a[@ng-click='guest()']").click()
-        # Make sure score element is there for screenshot
-        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'scoretitle'))
-        WebDriverWait(driver, timeout).until(element_present)
         try: # Close help pop up if there is
             element = driver.find_element_by_xpath("//button[@ng-click='$ctrl.actionButtonHandler()']")
             driver.execute_script("arguments[0].click();", element)
         except:
             pass
-        ## To print score for debugging
-        # soup = BeautifulSoup(driver.page_source, 'html.parser')
-        # riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
-        # print(riskLevel)
+        # Make sure score element is there for screenshot
+        element_present = EC.presence_of_element_located((By.ID, 'report'))
+        WebDriverWait(driver, timeout).until(element_present)
+        ## To print score
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
         try:
             driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(obj) + "_ibm.png")
             driver.quit()
-            return True
+            print("IBM: Screenshot saved")
         except:
             driver.quit()
-            return False
+            print("IBM: Failed to save screenshot")
+        return riskLevel
 
     def urlscan(self, url, uuid):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)

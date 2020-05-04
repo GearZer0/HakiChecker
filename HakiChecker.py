@@ -277,17 +277,25 @@ def getScreenshotIBM(obj):
             
 # call to this function when url mode on
 def IBM_URL(url):
-    getScreenshotIBM(url)
-    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
-    rate = str(resp['result']['score']) + " out of 10"
-    return rate
+    if ss_mode:
+        rate = ss.IBM(url)
+        if rate == "Unknown":
+            return NONE
+        else:
+            return rate + " out of 10"
+    else:
+        resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
+        rate = str(resp['result']['score']) + " out of 10"
+        return rate
 
 # call to this function when ip mode on
 def IBM_IP(ip):
-    getScreenshotIBM(ip)
-    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
-    rate = str(resp['history'][-1]['score']) + " out of 10"
-    return rate
+    if ss_mode:
+        return ss.IBM(ip)
+    else:
+        resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
+        rate = str(resp['history'][-1]['score']) + " out of 10"
+        return rate
 
 def getFGKey():
     keys = open(FG_KEYS, 'r').read().split('\n')
