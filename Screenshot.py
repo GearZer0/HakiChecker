@@ -22,6 +22,35 @@ class Screenshot(object):
         self.mode = mode
         self.api = api
 
+    def IBM(self, obj):
+        driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+        driver.get("https://exchange.xforce.ibmcloud.com/search/{}".format(quote(obj)))
+        timeout = 15
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'modal-dialog'))
+        WebDriverWait(driver, timeout).until(element_present)
+        # terms and condition + guest login
+        driver.find_element_by_xpath("//input[@ng-model='termsCheckbox']").click()
+        driver.find_element_by_xpath("//a[@ng-click='guest()']").click()
+        # Make sure score element is there for screenshot
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'scoretitle'))
+        WebDriverWait(driver, timeout).until(element_present)
+        try: # Close help pop up if there is
+            element = driver.find_element_by_xpath("//button[@ng-click='$ctrl.actionButtonHandler()']")
+            driver.execute_script("arguments[0].click();", element)
+        except:
+            pass
+        ## To print score for debugging
+        # soup = BeautifulSoup(driver.page_source, 'html.parser')
+        # riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
+        # print(riskLevel)
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(obj) + "_ibm.png")
+            driver.quit()
+            return True
+        except:
+            driver.quit()
+            return False
+
     def urlscan(self, url, uuid):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
         driver.get("https://urlscan.io/result/{}".format(uuid))

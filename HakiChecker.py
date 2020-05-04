@@ -268,14 +268,23 @@ def abusedIP(ip):
     rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
     return rate
 
+def getScreenshotIBM(obj):
+    if ss_mode:
+        if ss.IBM(obj):
+            print("IBM: Screenshot saved")
+        else:
+            print("IBM: Failed to save screenshot")
+            
 # call to this function when url mode on
 def IBM_URL(url):
+    getScreenshotIBM(url)
     resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
     rate = str(resp['result']['score']) + " out of 10"
     return rate
 
 # call to this function when ip mode on
 def IBM_IP(ip):
+    getScreenshotIBM(ip)
     resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
     rate = str(resp['history'][-1]['score']) + " out of 10"
     return rate

@@ -18,7 +18,7 @@ import Screenshot
 
 delay = 15
 api={}
-
+ss_mode = True
 
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
@@ -37,31 +37,26 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-def urlscan(url):
-    headers = {"API-Key": api.get("urlscan_apikey")}
-    data = {"url": url}
-    resp = requests.post(api.get("urlscan_api"), data=data, headers=headers).text
-    uuid = json.loads(resp)['uuid']
-    nextpage = json.loads(resp)['api']
-    result = requests.get(nextpage)
-    start = time()
-    time_elapsed = 0
-    #repeat until url has finished scanning. Max time is 65seconds
-    while result.status_code == 404 and time_elapsed < 65:
-        sleep(5)
-        result = requests.get(nextpage)
-        time_elapsed = time() - start
-    if ss.urlscan(url, uuid):
-        print("Screenshot done")
-    score = result.json()['verdicts']['overall']['score']
+def getScreenshotIBM(obj):
+    if ss_mode:
+        if ss.IBM(obj):
+            print("IBM: Screenshot saved")
+        else:
+            print("IBM: Failed to save screenshot")
 
-    with open("Images/" + 'url' + "/" + ss.makeFileName(url) + ".png", "wb+") as img_sc:
-        try:
-            img_sc.write(requests.get(api.get("urlscan_screenshot") + uuid + ".png").content)
-            print("URLscan: URL Screenshot saved")
-        except:
-            print("URLscan: Failed to save URL screenshot")
-    return [str(score) + " out of 100", uuid]
+# call to this function when url mode on
+def IBM_URL(url):
+    getScreenshotIBM(url)
+    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
+    rate = str(resp['result']['score']) + " out of 10"
+    return rate
+
+# call to this function when ip mode on
+def IBM_IP(ip):
+    getScreenshotIBM(ip)
+    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
+    rate = str(resp['history'][-1]['score']) + " out of 10"
+    return rate
 
 if __name__ == "__main__":
     init()
@@ -74,7 +69,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = urlscan(ip)
+            ct = IBM_URL(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
@@ -83,4 +78,4 @@ if __name__ == "__main__":
             ct = "N/A"
             pass
         pass
-        print("VirusTotal: " + str(ct))
+        print("IBM: " + str(ct))
