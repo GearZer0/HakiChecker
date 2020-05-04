@@ -22,6 +22,21 @@ class Screenshot(object):
         self.mode = mode
         self.api = api
 
+    def fraudguard(self, ip):
+        driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+        driver.get("https://fraudguard.io/?ip={}".format(ip))
+        timeout = 15
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'col-md-6'))
+        WebDriverWait(driver, timeout).until(element_present)
+        driver.execute_script("window.scrollTo(0, 500)")
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_abusedIP.png")
+            driver.quit()
+            return True
+        except:
+            driver.quit()
+            return False
+
     def abusedIP(self, ip):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
         driver.get("https://www.abuseipdb.com/check/{}".format(ip))

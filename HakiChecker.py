@@ -314,6 +314,11 @@ def removeOldFGKey(get_key):
         fl.write(get_key + "\n")
 
 def fraudGuard(ip):
+    if ss_mode:
+        if ss.fraudguard(ip):
+            print("fraudguard: Screenshot saved")
+        else:
+            print("fraudguard: Failed to save screenshot")
     fg_api = api.get("fg_api") + ip
     get_key = getFGKey()
     username = get_key.split(':')[0]

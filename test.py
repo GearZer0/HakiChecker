@@ -1,6 +1,7 @@
 import json
 from time import time, sleep
 
+from requests.auth import HTTPBasicAuth
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
@@ -19,6 +20,7 @@ import Screenshot
 delay = 15
 api={}
 ss_mode = True
+FG_KEYS = "fraudguard_keys.txt"
 
 vt_headers = {'Accept': 'application/json'}
 ibm_headers = {"Content-Type": "application/json"}
@@ -38,19 +40,34 @@ def init():
     ibm_headers['Authorization'] = "Basic " + final
 
 
-# only works for url, no ip support
-def abusedIP(ip):
-    ss.abusedIP(ip)
-    headers = {
-            'Key': api.get("abip_apikey"),
-            'Accept': 'application/json',
-        }
-    params = {
-            'ipAddress': ip,
-        }
-    resp = json.loads(requests.get(api.get("abip_api"), headers=headers, params=params).text)
-    rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
-    return rate
+def getFGKey():
+    keys = open(FG_KEYS, 'r').read().split('\n')
+    if keys == "":
+        print("Are you sure about FG Keys availability?")
+    return keys[0]
+
+def removeOldFGKey(get_key):
+    keys = open(FG_KEYS, 'r').read().split('\n')
+    open(FG_KEYS, 'w+').close()
+    with open(FG_KEYS, 'a+') as fl:
+        for i in keys:
+            if i != get_key:
+                fl.write(i + "\n")
+        fl.write(get_key + "\n")
+
+def fraudGuard(ip):
+    ss.fraudguard(ip)
+    fg_api = api.get("fg_api") + ip
+    get_key = getFGKey()
+    username = get_key.split(':')[0]
+    password = get_key.split(':')[1]
+    resp = requests.get(fg_api, verify=True, auth=HTTPBasicAuth(username, password))
+    if resp.status_code == 429:
+        print("API limit reached, changing username:password")
+        removeOldFGKey(get_key)
+        return fraudGuard(ip)
+    rate = json.loads(resp.text)['risk_level']
+    return rate + " out of 5"
 
 if __name__ == "__main__":
     init()
@@ -63,7 +80,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = abusedIP(ip)
+            ct = fraudGuard(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
@@ -72,4 +89,4 @@ if __name__ == "__main__":
             ct = "N/A"
             pass
         pass
-        print("abusedIP: " + str(ct))
+        print("fraudguard: " + str(ct))
