@@ -37,30 +37,24 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-def getScreenshotIBM(obj):
-    if ss_mode:
-        if ss.IBM(obj):
-            print("IBM: Screenshot saved")
-        else:
-            print("IBM: Failed to save screenshot")
 
-# call to this function when url mode on
-def IBM_URL(url):
-    getScreenshotIBM(url)
-    resp = json.loads(requests.get(api.get("ibm_url_api") + quote(url), headers=ibm_headers).text)
-    rate = str(resp['result']['score']) + " out of 10"
-    return rate
-
-# call to this function when ip mode on
-def IBM_IP(ip):
-    getScreenshotIBM(ip)
-    resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
-    rate = str(resp['history'][-1]['score']) + " out of 10"
+# only works for url, no ip support
+def abusedIP(ip):
+    ss.abusedIP(ip)
+    headers = {
+            'Key': api.get("abip_apikey"),
+            'Accept': 'application/json',
+        }
+    params = {
+            'ipAddress': ip,
+        }
+    resp = json.loads(requests.get(api.get("abip_api"), headers=headers, params=params).text)
+    rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
     return rate
 
 if __name__ == "__main__":
     init()
-    ss = Screenshot.Screenshot('url', api)
+    ss = Screenshot.Screenshot('ip', api)
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
@@ -69,7 +63,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = IBM_URL(ip)
+            ct = abusedIP(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
@@ -78,4 +72,4 @@ if __name__ == "__main__":
             ct = "N/A"
             pass
         pass
-        print("IBM: " + str(ct))
+        print("abusedIP: " + str(ct))

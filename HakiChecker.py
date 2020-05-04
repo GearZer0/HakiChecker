@@ -257,6 +257,11 @@ def virusTotalHash(hash):
 
 # only works for url, no ip support
 def abusedIP(ip):
+    if ss_mode:
+        if ss.abusedIP(ip):
+            print("Abused IP: Screenshot saved")
+        else:
+            print("Abused IP: Failed to save screenshot")
     headers = {
             'Key': api.get("abip_apikey"),
             'Accept': 'application/json',
@@ -287,7 +292,6 @@ def IBM_URL(url):
 # call to this function when ip mode on
 def IBM_IP(ip):
     if ss_mode:
-        print("ss")
         return getScreenshotIBM(ip)
     else:
         resp = json.loads(requests.get(api.get("ibm_ip_api") + ip, headers=ibm_headers).text)
