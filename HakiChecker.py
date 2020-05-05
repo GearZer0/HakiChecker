@@ -108,7 +108,7 @@ def saveRecord(data, formula):
                                  "FraudGuard": data[4], "Auth0": data[5], "Action": malic})
     elif formula == "url":
         if ss_mode:
-            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank","URLScan", "URLScanUUID", "CiscoTalos", "Action"]
+            fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank", "URLScan", "URLScanUUID", "CiscoTalos", "Action"]
         else:
             fieldnames = ["Target", "IBM", "VirusTotal", "GoogleSafeBrowsing", "PhishTank", "Action"]
         with open(output_directory + result_url_name, mode="a+", encoding="utf-8", newline="") as csv_file:
@@ -117,16 +117,16 @@ def saveRecord(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if data[1].startswith("1 out") == False and data[1] != NONE:
+            if data[1].startswith("1 out") == False and data[1] != NONE: #IBM
                 #malic = "Malicious"
                 nonzero += 1
-            if data[2].startswith("0 out") == False and data[2] != NONE:
+            if data[2].startswith("0 out") == False and data[2] != NONE: #VT
                 #malic = "Malicious"
                 nonzero += 1
-            if data[3].startswith("Safe") == False and data[4] != NONE:
+            if data[3].startswith("Safe") == False and data[4] != NONE: #Google
                 #malic = "Malicious"
                 nonzero += 1
-            if data[4] == True and data[4] != NONE:
+            if data[4] != False and data[4] != NONE: #PhishTank
                 #malic = "Malicious"
                 nonzero += 1
             if ss_mode and data[5].startswith("0 out") == False and data[5] != NONE:
@@ -413,6 +413,11 @@ def hybrid(url):
     return resp2['threat_level']
 
 def phishtank(url):
+    if ss_mode:
+        if ss.phishtank(url):
+            print("PhishTank: Screenshot saved")
+        else:
+            print("PhishTank: Failed to save screenshot")
     data = {
         "url": url,
         'format': "json",
@@ -426,7 +431,15 @@ def phishtank(url):
         raise Exception("ERROR: Requests Exceeded! Please wait at most 5 minutes to reset the number of requests.")
     elif resp.status_code != 200:
         raise Exception("")
-    return resp.json()['results']['in_database']
+
+    if resp.json()['results']['in_database']: # if it exists in database
+        if not resp.json()['results']['verified']: # if pending verification return malicious
+            return "Questionable"
+        elif resp.json()['results']['verified'] and resp.json()['results']['valid']: # if verified as phish return malicious
+            return "Phish"
+        else: # if verified as not a phish
+            return False
+    return False # if not in database
 
 
 def modeIP(ip):

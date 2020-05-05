@@ -19,20 +19,38 @@ class Screenshot(object):
         self.mode = mode
         self.api = api
 
-    def auth0(self, ip):
+    def phishtank(self, url):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
-        driver.get("https://auth0.com/signals/ip/{}-report".format(ip))
-        timeout = 15
-        element_present = EC.presence_of_element_located((By.XPATH, '//section[@data-results-register="true"]'))
+        driver.get("https://www.phishtank.com/")
+        timeout = 10
+        element_present = EC.presence_of_element_located((By.ID, 'main'))
         WebDriverWait(driver, timeout).until(element_present)
-        driver.execute_script("window.scrollTo(0, 200)")
+        input = driver.find_element_by_xpath("//input[@type='text' and @name='isaphishurl' and @value='http://']")
+        input.clear()
+        input.send_keys(url)
+        driver.find_element_by_xpath("//input[@type='submit' and @class='submitbutton']").click()
         try:
-            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_auth0.png")
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(url) + "_phishtank.png")
             driver.quit()
             return True
         except:
             driver.quit()
             return False
+
+    def auth0(self, ip):
+            driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+            driver.get("https://auth0.com/signals/ip/{}-report".format(ip))
+            timeout = 15
+            element_present = EC.presence_of_element_located((By.XPATH, '//section[@data-results-register="true"]'))
+            WebDriverWait(driver, timeout).until(element_present)
+            driver.execute_script("window.scrollTo(0, 200)")
+            try:
+                driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_auth0.png")
+                driver.quit()
+                return True
+            except:
+                driver.quit()
+                return False
 
     def googleSafe(self, url):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)

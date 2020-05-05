@@ -40,18 +40,33 @@ def init():
     ibm_headers['Authorization'] = "Basic " + final
 
 
-def auth0(ip):
-    ss.auth0(ip)
-    headers = {
-        "Accept": "application/json",
-        "X-Auth-Token":api.get("auth0_apikey")
+def phishtank(url):
+    ss.phishtank(url)
+    data = {
+        "url": url,
+        'format': "json",
+        'app_key': api.get("phish_apikey")
         }
-    resp = requests.get(api.get("auth0_api") + ip,headers=headers).json()
-    return str(resp['fullip']['score']).strip()
+    headers = {
+        "User-Agent": "phishtank/" + api.get("phish_user")
+        }
+    resp = requests.post(api.get("phish_api"), headers=headers, data=data)
+    if resp.status_code == 509:
+        raise Exception("ERROR: Requests Exceeded! Please wait at most 5 minutes to reset the number of requests.")
+    elif resp.status_code != 200:
+        raise Exception("")
+    if resp.json()['results']['in_database']: # if it exists in database
+        if not resp.json()['results']['verified']: # if pending verification return malicious
+            return "Questionable"
+        elif resp.json()['results']['verified'] and resp.json()['results']['valid']: # if verified as phish, return malicious
+            return "Phish"
+        else: # if verified as not a phish
+            return False
+    return False # if not in database
 
 if __name__ == "__main__":
     init()
-    ss = Screenshot.Screenshot('ip', api)
+    ss = Screenshot.Screenshot('url', api)
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
@@ -60,7 +75,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = auth0(ip)
+            ct = phishtank(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
