@@ -381,6 +381,11 @@ def googleSafe(url):
         return "Safe"
 
 def auth0(ip):
+    if ss_mode:
+        if ss.auth0(ip):
+            print("auth0: Screenshot saved")
+        else:
+            print("auth0: Failed to save screenshot")
     headers = {
         "Accept": "application/json",
         "X-Auth-Token":api.get("auth0_apikey")

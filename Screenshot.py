@@ -19,6 +19,21 @@ class Screenshot(object):
         self.mode = mode
         self.api = api
 
+    def auth0(self, ip):
+        driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
+        driver.get("https://auth0.com/signals/ip/{}-report".format(ip))
+        timeout = 15
+        element_present = EC.presence_of_element_located((By.XPATH, '//section[@data-results-register="true"]'))
+        WebDriverWait(driver, timeout).until(element_present)
+        driver.execute_script("window.scrollTo(0, 200)")
+        try:
+            driver.save_screenshot("Images/" + self.mode + "/" + self.makeFileName(ip) + "_auth0.png")
+            driver.quit()
+            return True
+        except:
+            driver.quit()
+            return False
+
     def googleSafe(self, url):
         driver = webdriver.Chrome(executable_path=self.api.get("drive"), options=chrome_options)
         driver.get("https://transparencyreport.google.com/safe-browsing/search?url={}&hl=en".format(url))

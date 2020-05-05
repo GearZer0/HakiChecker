@@ -39,33 +39,19 @@ def init():
     final = str(data.decode('utf-8'))
     ibm_headers['Authorization'] = "Basic " + final
 
-def checkExceptionGS(code):
-    if code == 403:
-        raise Exception("ERROR: Please verify API KEY!")
-    elif code == 429:
-        raise Exception("ERROR: Requests Exceeded!")
-    elif code != 200:
-        raise Exception("")
 
-def googleSafe(url):
-    ss.googleSafe(url)
-    data = {
-        "client":{"clientId":"ProjectAuto", "clientVersion":"1.5.2"},
-        "threatInfo":{
-            "threatTypes":["MALWARE", "SOCIAL_ENGINEERING", "THREAT_TYPE_UNSPECIFIED", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-            "platformTypes":["WINDOWS"],
-            "threatEntryTypes":["URL"],
-            "threatEntries":[{"url": url}]}}
-    resp = requests.post(api.get("google_api")+api.get("google_apikey"),data=json.dumps(data))
-    checkExceptionGS(resp.status_code)
-    if "matches" in resp.json().keys():
-        return resp.json()["matches"][0]["threatType"]
-    else:
-        return "Safe"
+def auth0(ip):
+    ss.auth0(ip)
+    headers = {
+        "Accept": "application/json",
+        "X-Auth-Token":api.get("auth0_apikey")
+        }
+    resp = requests.get(api.get("auth0_api") + ip,headers=headers).json()
+    return str(resp['fullip']['score']).strip()
 
 if __name__ == "__main__":
     init()
-    ss = Screenshot.Screenshot('url', api)
+    ss = Screenshot.Screenshot('ip', api)
     file_to_read = sys.argv[2]
     print(file_to_read)
     file_data = open(file_to_read, 'r').read().split('\n')
@@ -74,7 +60,7 @@ if __name__ == "__main__":
             continue
         print("IN USE: " + ip)
         try:
-            ct = googleSafe(ip)
+            ct = auth0(ip)
         except TimeoutException as e:
             print("Time out")
             ct = "N/A"
@@ -83,4 +69,4 @@ if __name__ == "__main__":
             ct = "N/A"
             pass
         pass
-        print("fraudguard: " + str(ct))
+        print("auth0: " + str(ct))
