@@ -230,20 +230,27 @@ FILE
 - When URLscan's API takes longer than 65 seconds, it will return N/A
 - When screenshot fails, please check the network connection and retry
 (if it is too weak, it may take too long to load which can cause timeout and result in failed screenshot)
+- When there is an change in interface for any OSINT, screenshot mode for that OSINT may start to fail because it is 
+heavily dependent on the interface (web scraping). When this happens, please let me know so that I can update the code
+ to match the interface.
 
 ### FAQ
-Q : Why file upload requires long delay? 
-
+##### Q : Why file upload requires long delay? 
 A : Virustotal takes some time to finish the file upload process (the bigger the file the longer the delay)
 
-Q : Why screenshot takes longer time?
-
+##### Q : Why screenshot takes longer time?
 A : urlscan.io and the screenshot process akes a while
 
-Q: Why does the OSINT returns N/A sometimes?
+##### Q: Why does the OSINT returns N/A sometimes?
 
 A: IBM and CiscoTalos will return N/A when the url or ip is classified as **unknown**. 
-When an OSINT continuously returns N/A for all the reputation check, it means there was a problem getting the results. 
+When an OSINT continuously returns N/A for all the reputation check, it means there was a problem getting the results.
+This may be due to a few reasons:
+ 1. Wrong API key => please check your config.txt  
+ 2. Exceeded limit for that API => wait or make more api key (depends on different OSINT)
+ 3. Bugs
+ 4. OSINT server issue => This is due to their server problem 
+ 5. Time out for URLscan.io => check network
 If this problem persists after retrying, please contact me via email. 
 
 ### Source
