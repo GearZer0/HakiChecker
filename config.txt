@@ -1,46 +1,24 @@
 drive = C:/Users/***REMOVED***/Downloads/chromedriver.exe
 
 [Virus Total]
-vt_apikey =
-vt_url_api = https://www.virustotal.com/api/v3/urls/{}
-vt_file_api = https://www.virustotal.com/api/v3/files
-vt_ip_api = https://www.virustotal.com/api/v3/ip_addresses/{}
-vt_ss_link = https://www.virustotal.com/gui/{identifier}/{target}/detection
+vt_key =
 
 [AbuseIPDB]
-abip_apikey =
-abip_api = https://api.abuseipdb.com/api/v2/check
+abip_key =
 
 [IBM]
-ibm_apikey = 
-ibm_apipass =
-ibm_ip_api = https://api.xforce.ibmcloud.com/ipr/
-ibm_url_api = https://api.xforce.ibmcloud.com/url/
-
-[Fraud Guard]
-fg_api = https://api.fraudguard.io/ip/
+ibm_key =
+ibm_pass =
 
 [URLScan]
-urlscan_apikey =
-urlscan_api = https://urlscan.io/api/v1/scan/
-urlscan_screenshot = https://urlscan.io/screenshots/
+urlscan_key =
 
 [Google Safe]
-google_apikey =
-google_api = https://safebrowsing.googleapis.com/v4/threatMatches:find?key=
+google_key =
 
 [Auth0]
-auth0_apikey =
-auth0_api = https://signals.api.auth0.com/v2.0/ip/
-
-[Hybrid Analysis]
-hybrid_apikey =
-hybrid_api = https://www.hybrid-analysis.com/api/v2/quick-scan/url-for-analysis
+auth0_key =
 
 [PhishTank]
-phish_apikey =
+phish_key =
 phish_user =
-phish_api = https://checkurl.phishtank.com/checkurl/
-
-[Cisco Talos]
-cisco_iporurl_link = https://talosintelligence.com/reputation_center/lookup?search=
