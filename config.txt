@@ -1,4 +1,4 @@
-drive = C:/Users/***REMOVED***/Downloads/chromedriver.exe
+drive =
 
 [Virus Total]
 vt_key =

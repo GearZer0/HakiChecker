@@ -185,6 +185,9 @@ class Screenshot(object):
         except WebDriverException:
             print(C.CISCO + ": " + C.SS_FAILED)
         driver.quit()
+
+        if web_reputation == "Unknown":
+            web_reputation = C.NONE
         return web_reputation
 
     # For url and ip

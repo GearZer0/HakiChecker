@@ -17,10 +17,10 @@ FG_KEYS = "fraudguard_keys.txt"
 CONFIG = "config.txt"
 
 # SOME CONFIG, related to input output file
-SAVE_IP = "result_ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for ip here
-SAVE_URL = "result_url_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for url here
-SAVE_FILE = "result_file{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for files here
-SAVE_HASH = "result_hash{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for hash here
+SAVE_IP = "ip_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for ip here
+SAVE_URL = "url_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for url here
+SAVE_FILE = "file_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for files here
+SAVE_HASH = "hash_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # save result for hash here
 
 # OSINT constants
 # [VirusTotal] api / links
