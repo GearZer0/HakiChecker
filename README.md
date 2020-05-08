@@ -233,6 +233,11 @@ FILE
 - When there is an change in interface for any OSINT, screenshot mode for that OSINT may start to fail because it is 
 heavily dependent on the interface (web scraping). When this happens, please let me know so that I can update the code
  to match the interface.
+- CiscoTalos says: "Please go to www.cisco..... to check if captcha is required and complete it once". If after doing this,
+it still continues to say that, there are 3 solutions. (A) Try using VPN (B) Open up Screenshot.py and change
+ `options.add_argument("--headless")` to `# options.add_argument("--headless")` and `timeout = 20` to `timeout = 60`. 
+ This will cause chrome browser to open up for each of the OSINT. When CiscoTalos is being checked, you will see that
+  a captcha is required. Please complete the captcha in 1 minute and let it load on its own. (C) Ignore Cisco Talos
 
 ### FAQ
 ##### Q : Why file upload requires long delay? 

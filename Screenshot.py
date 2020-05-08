@@ -1,7 +1,4 @@
 import logging
-import socket
-import requests
-import selenium
 from selenium import webdriver
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
@@ -11,21 +8,15 @@ from urllib.parse import quote
 import base64
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from lxml.html import fromstring
 import Constant as C
 
-timeout = 20
-count = -1
-# Get proxy
-hostname = socket.gethostname()
-hostaddr = socket.gethostbyname(hostname)  # your own ip
-currentProxy = hostaddr
 # Selenium driver options
 options = Options()
 options.add_argument("--window-size=1680x1050")
-options.add_argument("--headless")
 options.add_experimental_option("excludeSwitches", ["enable-automation", 'enable-logging'])
 options.add_experimental_option('useAutomationExtension', False)
+options.add_argument("--headless")
+timeout = 20
 
 
 class Screenshot(object):
@@ -34,7 +25,6 @@ class Screenshot(object):
         self.mode = mode
         self.key = key
         self.imageName = ""
-        self.proxies = self.get_proxies()
         logging.info("Initialised Screenshot mode with identifier " + mode)
 
     def phishtank(self, url):
@@ -220,31 +210,16 @@ class Screenshot(object):
             driver.save_screenshot(self.imageName.format(C.CISCO))
             print(C.CISCO + ": " + C.SS_SAVED)
             logging.info(C.CISCO + " - Screenshot saved at " + self.imageName.format(C.CISCO))
-        except TimeoutException:
-            logging.exception(C.CISCO + " - Screenshot")
-            print(C.CISCO + ": " + C.SS_FAILED)
-            element_present = EC.presence_of_element_located((By.id, 'cf-wrapper'))
-            WebDriverWait(driver, timeout).until(element_present)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            if soup.find('div', attrs={'class': 'cf-alert'}):
-                print(C.CISCO + ": Please go to {} to check if captcha is required and complete it once".format(quote(iporurl)))
-                self.changeProxy()
-                options.add_argument('--proxy-server={}'.format(currentProxy))
-                driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
-                driver.get(C.CISCO_SS + quote(iporurl))
-                try:
-                    element_present = EC.presence_of_element_located((By.CLASS_NAME, 'new-legacy-label'))
-                    WebDriverWait(driver, timeout).until(element_present)
-                    soup = BeautifulSoup(driver.page_source, 'html.parser')
-                    web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
-                    driver.save_screenshot(self.imageName.format(C.CISCO))
-                    print(C.CISCO + ": " + C.SS_SAVED)
-                    logging.info(C.CISCO + " - Screenshot saved at " + self.imageName.format(C.CISCO))
-                except:
-                    pass
         except WebDriverException:
             logging.exception(C.CISCO + " - Screenshot")
             print(C.CISCO + ": " + C.SS_FAILED)
+            try:
+                element_present = EC.presence_of_element_located((By.ID, 'cf-wrapper'))
+                WebDriverWait(driver, timeout).until(element_present)
+                print(C.CISCO + ": Please go to {} to check if captcha is required and complete it once"
+                      .format(C.CISCO_SS + quote(iporurl)))
+            except:
+                pass
         finally:
             driver.quit()
             if web_reputation == "Unknown":
@@ -264,30 +239,4 @@ class Screenshot(object):
             name = obj[1].split("/")[-1].split(".")[0]
         self.imageName = "Images/" + self.mode + "/" + name + "_{}.png"
 
-
-    def get_proxies(self):
-        url = 'https://free-proxy-list.net/'
-        response = requests.get(url)
-        parser = fromstring(response.text)
-        proxies = []
-        for i in parser.xpath('//tbody/tr')[:10]:
-            if i.xpath('.//td[7][contains(text(),"yes")]'):
-                #Grabbing IP and corresponding PORT
-                proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
-                proxies.append(proxy)
-
-        print(proxies)
-        return proxies
-
-    def changeProxy(self):
-        global currentProxy
-        global count
-        count += 1
-        if count >= len(self.proxies):
-            count = -1
-            currentProxy = hostaddr
-        else:
-            currentProxy = self.proxies[count]
-        print(currentProxy)
-        options.add_argument('--proxy-server=' + str(currentProxy))
 
