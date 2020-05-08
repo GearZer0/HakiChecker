@@ -25,7 +25,7 @@ SAVE_HASH = "hash_{}.csv".format(datetime.now().strftime("%Y-%m-%d_%H%M"))  # sa
 # OSINT constants
 # [VirusTotal] api / links
 VT = 'VirusTotal'
-VT_URL = 'https://www.virustotal.com/api/v3/urls/'
+VT_URL = 'https://www.virustotal.com/api/v3/urls'
 VT_FILE = 'https://www.virustotal.com/api/v3/files'
 VT_FILE_BIG = 'https://www.virustotal.com/api/v3/files/upload_url'
 VT_IP = 'https://www.virustotal.com/api/v3/ip_addresses/{}'

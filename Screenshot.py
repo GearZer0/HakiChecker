@@ -1,5 +1,8 @@
+import logging
+
+import selenium
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
@@ -13,8 +16,8 @@ import Constant as C
 
 options = Options()
 options.add_argument("--window-size=1680x1050")
-options.add_argument("--headless")
-options.add_experimental_option('excludeSwitches', ['enable-logging'])  # for debugging comment this out
+# options.add_argument("--headless")
+# options.add_experimental_option('excludeSwitches', ['enable-logging'])  # for debugging comment this out
 timeout = 20
 
 
@@ -24,6 +27,7 @@ class Screenshot(object):
         self.mode = mode
         self.key = key
         self.imageName = ""
+        logging.info("Initialised Screenshot mode with identifier " + mode)
 
     def phishtank(self, url):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -36,11 +40,14 @@ class Screenshot(object):
             input.send_keys(url)
             driver.find_element_by_xpath("//input[@type='submit' and @class='submitbutton']").click()
             driver.save_screenshot(self.imageName.format(C.PHISH))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.PHISH + " - Screenshot saved at " + self.imageName.format(C.PHISH))
         except WebDriverException:
+            logging.exception(C.PHISH + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     def auth0(self, ip):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -50,11 +57,14 @@ class Screenshot(object):
             WebDriverWait(driver, timeout).until(element_present)
             driver.execute_script("window.scrollTo(0, 200)")
             driver.save_screenshot(self.imageName.format(C.AUTH0))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.AUTH0 + " - Screenshot saved at " + self.imageName.format(C.AUTH0))
         except WebDriverException:
+            logging.exception(C.AUTH0 + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     def googleSafe(self, url):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -63,11 +73,14 @@ class Screenshot(object):
             element_present = EC.presence_of_element_located((By.TAG_NAME, 'data-tile'))
             WebDriverWait(driver, timeout).until(element_present)
             driver.save_screenshot(self.imageName.format(C.GOOGLE))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.GOOGLE + " - Screenshot saved at " + self.imageName.format(C.GOOGLE))
         except WebDriverException:
+            logging.exception(C.GOOGLE + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     def fraudguard(self, ip):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -77,11 +90,14 @@ class Screenshot(object):
             WebDriverWait(driver, timeout).until(element_present)
             driver.execute_script("window.scrollTo(0, 500)")
             driver.save_screenshot(self.imageName.format(C.FG))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.FG + " - Screenshot saved at " + self.imageName.format(C.FG))
         except WebDriverException:
+            logging.exception(C.FG + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     def abusedIP(self, ip):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -90,11 +106,14 @@ class Screenshot(object):
             element_present = EC.presence_of_element_located((By.CLASS_NAME, 'well'))
             WebDriverWait(driver, timeout).until(element_present)
             driver.save_screenshot(self.imageName.format(C.ABIP))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.ABIP + " - Screenshot saved at " + self.imageName.format(C.ABIP))
         except WebDriverException:
+            logging.exception(C.ABIP + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     # for url and ip
     def IBM(self, obj):
@@ -119,23 +138,30 @@ class Screenshot(object):
         try:
             driver.save_screenshot(self.imageName.format(C.IBM))
             print(C.IBM + ": " + C.SS_SAVED)
+            logging.info(C.IBM + " - Screenshot saved at " + self.imageName.format(C.IBM))
         except WebDriverException:
+            logging.exception(C.IBM + " - Screenshot")
             print(C.IBM + ": " + C.SS_FAILED)
-        driver.quit()
-        return riskLevel
+        finally:
+            driver.quit()
+            return riskLevel
 
-    def urlscan(self, url, uuid):
+    def urlscan(self, uuid):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
         driver.get(C.URLSCAN_SS.format(uuid))
         try:
             element_present = EC.presence_of_element_located((By.CLASS_NAME, 'container'))
             WebDriverWait(driver, timeout).until(element_present)
             driver.save_screenshot(self.imageName.format(C.URLSCAN))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.URLSCAN + " - Screenshot saved at " + self.imageName.format(C.URLSCAN))
         except WebDriverException:
+            logging.exception(C.URLSCAN + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
+
 
     def virusTotal(self, obj):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
@@ -164,11 +190,14 @@ class Screenshot(object):
             # rate = str(positives) + " out of " + str(total)
             # print(rate)
             driver.save_screenshot(self.imageName.format(C.VT))
-            driver.quit()
-            return True
+            saved = True
+            logging.info(C.VT + " - Screenshot saved at " + self.imageName.format(C.VT))
         except WebDriverException:
+            logging.exception(C.VT + " - Screenshot")
+            saved = False
+        finally:
             driver.quit()
-            return False
+            return saved
 
     # works for both ip or url
     def ciscoTalos(self, iporurl):
@@ -182,13 +211,15 @@ class Screenshot(object):
             web_reputation = soup.find('span', attrs={'class': 'new-legacy-label'}).text.split()[0]
             driver.save_screenshot(self.imageName.format(C.CISCO))
             print(C.CISCO + ": " + C.SS_SAVED)
+            logging.info(C.CISCO + " - Screenshot saved at " + self.imageName.format(C.CISCO))
         except WebDriverException:
+            logging.exception(C.CISCO + " - Screenshot")
             print(C.CISCO + ": " + C.SS_FAILED)
-        driver.quit()
-
-        if web_reputation == "Unknown":
-            web_reputation = C.NONE
-        return web_reputation
+        finally:
+            driver.quit()
+            if web_reputation == "Unknown":
+                web_reputation = C.NONE
+            return web_reputation
 
     # For url and ip
     def makeFileName(self, obj):

@@ -6,9 +6,13 @@ import base64
 import csv
 import sys
 import os
-from urllib.parse import quote
 from time import sleep, time
+from urllib.parse import quote
+import logging
 from requests.auth import HTTPBasicAuth
+from validator_collection import validators
+from validator_collection.errors import *
+
 import Constant as C
 import Screenshot
 
@@ -27,14 +31,16 @@ ss_mode = False
 single_mode = False
 
 
-# initialise all the api keys and apis from config.txt
 def init():
+    # create logger
+    logging.basicConfig(filename="hakichecker.log", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")
+    # initialise all the api keys and apis from config.txt
     with open(C.CONFIG) as f:
         for line in f:
             if line != "\n" and not line.startswith('['):
                 (k, val) = line.split("=", 1)
                 key[k.strip()] = val.strip()
-
+    logging.info("Keys have been loaded")
     # Initialise vt_header
     vt_headers['x-apikey'] = key.get("vt_key")
 
@@ -47,18 +53,35 @@ def init():
     # Create Directory
     try:
         os.mkdir("Images")
+    except FileExistsError as e:
+        logging.warning(e)
+    try:
         os.mkdir("Images/ip")
+    except FileExistsError as e:
+        logging.warning(e)
+    try:
         os.mkdir("Images/url")
+    except FileExistsError as e:
+        logging.warning(e)
+    try:
         os.mkdir("Images/hash")
+    except FileExistsError as e:
+        logging.warning(e)
+    try:
         os.mkdir("Images/file")
+    except FileExistsError as e:
+        logging.warning(e)
+    try:
         os.mkdir("Results")
-        # os.mkdir("images_hybrid")
-    except FileExistsError:
-        pass
+    except FileExistsError as e:
+        logging.warning(e)
+    # os.mkdir("images_hybrid")
+
 
 
 # function to save result in csv file
 def save_record(data, formula):
+    logging.info("Saving Record of {mode}: {target}".format(mode=mode, target=data[0]))
     if formula == C.IP_MODE:
         fieldnames = ["Target", C.IBM, C.VT, C.ABIP, C.FG, C.AUTH0, "Action"]
         if ss_mode:
@@ -141,12 +164,20 @@ def save_record(data, formula):
 
 
 def vt_result(result):
-    harmless = int(result.json()['data']['attributes']['last_analysis_stats']['harmless'])
-    malicious = int(result.json()['data']['attributes']['last_analysis_stats']['malicious'])
-    suspicious = int(result.json()['data']['attributes']['last_analysis_stats']['suspicious'])
-    undetected = int(result.json()['data']['attributes']['last_analysis_stats']['undetected'])
-    rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
-    return rate
+    try:
+        harmless = int(result.json()['data']['attributes']['last_analysis_stats']['harmless'])
+        malicious = int(result.json()['data']['attributes']['last_analysis_stats']['malicious'])
+        suspicious = int(result.json()['data']['attributes']['last_analysis_stats']['suspicious'])
+        undetected = int(result.json()['data']['attributes']['last_analysis_stats']['undetected'])
+        rate = str(malicious) + " out of " + str(malicious + harmless + suspicious + undetected)
+    except (KeyError, TypeError) as e:
+        logging.error(C.VT + " - vt_result() - " + str(e))
+        rate = C.NONE
+    except Exception as e:
+        logging.critical(C.VT + " - vt_result() - " + str(e))
+        rate = C.NONE
+    finally:
+        return rate
 
 
 # Get MD5 hash
@@ -158,13 +189,17 @@ def getmd5(fname):
     return hash_md5.hexdigest()
 
 
-def vt_exception(code):
-    if code == 401:
-        raise Exception("ERROR: Please verify API KEY!")
-    elif code == 429:
-        raise Exception("ERROR: Requests Exceeded!")
-    elif code != 200:
-        raise Exception("")
+def vt_exception(resp):
+    # https://developers.virustotal.com/v3.0/reference#errors
+    code = resp.status_code
+    if not str(code).startswith('2'):
+        try:
+            msg = resp.json()['error']['message']
+        except ValueError as e:
+            msg = e
+        if code == 401 or code == 503 or code == 429:
+            print(C.VT + ": ERROR - " + msg)
+        raise Exception(msg)
 
 
 def vt_screenshot(obj):
@@ -176,66 +211,113 @@ def vt_screenshot(obj):
 
 
 def virusTotalIP(ip):
-    resp = requests.get(C.VT_IP.format(ip), headers=vt_headers)
-    vt_exception(resp.status_code)
-    # available status: harmless, malicious, suspicious, timeout, undetected
     vt_screenshot(ip)
-    return vt_result(resp)
+    try:
+        resp = requests.get(C.VT_IP.format(ip), headers=vt_headers)
+        vt_exception(resp)
+    except Exception as e:
+        vt = C.NONE
+        logging.exception(C.VT + " - " + str(e))
+    else:
+        # available status: harmless, malicious, suspicious, timeout, undetected
+        vt = vt_result(resp)
+    finally:
+        print(C.VT + ": " + vt)
+        logging.info(C.VT + " - " + vt)
+        return vt
 
 
 def virusTotalURL(url):
-    # send url to scan
-    resp = requests.post(C.VT_URL, headers=vt_headers, data={'url': url})
-    # fetch scan results
-    encoded_url = base64.b64encode(url.encode())
-    resp = requests.get(
-        C.VT_URL + '{}'.format(encoded_url.decode().replace('=', '')),
-        headers=vt_headers)
-    vt_exception(resp.status_code)
-    # Check if the analysis is finished before returning the results
-    # if 'last_analysis_results' key-value pair is empty, then it is not finished
-    while not resp.json()['data']['attributes']['last_analysis_results']:
-        resp = resp.get(
-            C.VT_URL + '{}'.format(encoded_url.decode().replace('=', '')),
+    try:  # send url to scan
+        resp = requests.post(C.VT_URL, headers=vt_headers, data={'url': url})
+        vt_exception(resp)
+        req_id = resp.json()['data']['id'].split('-')[1]
+    except Exception as e:
+        logging.error(C.VT + " - " + str(e))
+    try:
+        # fetch scan results
+        resp = requests.get(
+            C.VT_URL + '/{}'.format(req_id),
             headers=vt_headers)
-        sleep(3)
-    # available status: harmless, malicious, suspicious, timeout, undetected
-    vt_screenshot(url)
-    return vt_result(resp)
+        vt_exception(resp)
+        # Check if the analysis is finished before returning the results
+        while not resp.json()['data']['attributes']['last_analysis_results']:
+            resp = requests.get(
+                C.VT_URL + '/{}'.format(req_id),
+                headers=vt_headers)
+            sleep(3)
+        vt_exception(resp)
+    except Exception as e:
+        vt = C.NONE
+        logging.exception(C.VT + " - " + str(e))
+    else:
+        # available status: harmless, malicious, suspicious, timeout, undetected
+        vt = vt_result(resp)
+    finally:
+        vt_screenshot(url)
+        print(C.VT + ": " + vt)
+        logging.info(C.VT + " - " + vt)
+        return vt
 
 
 def virusTotalFile(file):
-    if not os.path.isfile(file):
-        raise Exception('File not found. Please submit a valid file path')
     with open(file, 'rb') as f:
         data = {'file': f.read()}
     # upload file based on size
     file_size = os.path.getsize(file)
-    if file_size <= 33554432:
-        resp = requests.post(C.VT_FILE, headers=vt_headers, files=data)
-    else:  # bigger than 32 mb - there may be performance issue as a file gets too big
-        resp = requests.get(C.VT_FILE_BIG, headers=vt_headers)
-        vt_exception(resp.status_code)
-        upload_url = resp.json()['data']
-        resp = requests.post(upload_url, headers=vt_headers, files=data)
-    vt_exception(resp.status_code)
-    # retrieve analysis
-    filehash = str(getmd5(file))
-    return virusTotalHash([filehash, file])[4]
+    try:
+        if file_size <= 33554432:
+            resp = requests.post(C.VT_FILE, headers=vt_headers, files=data)
+        else:  # bigger than 32 mb - there may be performance issue as a file gets too big
+            resp = requests.get(C.VT_FILE_BIG, headers=vt_headers)
+            vt_exception(resp)
+            upload_url = resp.json()['data']
+            resp = requests.post(upload_url, headers=vt_headers, files=data)
+        vt_exception(resp)
+    except Exception as e:
+        vt = C.NONE
+        logging.exception(C.VT + " - " + str(e))
+    else:
+        vt = vt_result(resp)
+        filehash = str(getmd5(file))
+        # retrieve analysis
+        vt = virusTotalHash([filehash, file])[4]
+    finally:
+        print(C.VT + ": " + vt)
+        logging.info(C.VT + " - " + vt)
+        return vt
 
 
 def virusTotalHash(a_hash):
     vt_screenshot(a_hash)
     if mode == C.FILE_MODE:
         a_hash = a_hash[0]
-    resp = requests.get(C.VT_FILE + '/{}'.format(a_hash), headers=vt_headers)
-    vt_exception(resp.status_code)
-    rate = vt_result(resp)
-    # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
-    md5 = resp.json()['data']['attributes']['md5']
-    sha256 = resp.json()['data']['attributes']['sha256']
-    sha1 = resp.json()['data']['attributes']['sha1']
-    return [a_hash, md5, sha256, sha1, rate]
+    try:
+        resp = requests.get(C.VT_FILE + '/{}'.format(a_hash), headers=vt_headers)
+        vt_exception(resp)
+    except Exception as e:
+        vt = C.NONE
+        logging.exception(C.VT + " - " + str(e))
+    else:
+        # Status: confirmed-timeout, failure, harmless, malicious, suspicious, timeout, type-unsupported, undetected
+        vt = vt_result(resp)
+    finally:
+        print(C.VT + ": " + str(vt))
+        logging.info(C.VT + " - " + vt)
+
+    try:
+        md5 = resp.json()['data']['attributes']['md5']
+        sha256 = resp.json()['data']['attributes']['sha256']
+        sha1 = resp.json()['data']['attributes']['sha1']
+    except (KeyError, TypeError) as e:
+        logging.error(C.VT + " - virusTotalHash() - " + str(e))
+        md5 = C.NONE
+        sha256 = C.NONE
+        sha1 = C.NONE
+    finally:
+        data = [a_hash, md5, sha256, sha1, vt]
+        return data
+
 
 
 # only works for url, no ip support
@@ -334,7 +416,7 @@ def urlscan(url):
         sleep(5)
         result = requests.get(nextpage)
         time_elapsed = time() - begin
-    if ss.urlscan(url, uuid):
+    if ss.urlscan(uuid):
         print(C.URLSCAN + ": " + C.SS_SAVED)
     else:
         print(C.URLSCAN + ": " + C.SS_FAILED)
@@ -444,18 +526,47 @@ def phishtank(url):
             return False
     return False  # if not in database
 
+def isIP(ip):
+    if ip == "":
+        return False
+    logging.info("---------- Checking " + ip + " ----------")
+    try:
+        validators.ip_address(ip)
+        return True
+    except InvalidIPAddressError as e:
+        print(e)
+        logging.error(e)
+        return False
+
+
+def isURL(url):
+    if url == "":
+        return False
+    logging.info("---------- Checking " + url + " ----------")
+    try:
+        validators.url(url)
+        return True
+    except InvalidURLError as e:
+        print(e)
+        logging.error(e)
+        return False
+
+
+def isFile(file):
+    if file == "":
+        return False
+    logging.info("---------- Checking " + file + " ----------")
+    if not os.path.isfile(file):
+        print('File not found. Please submit a valid file path')
+        logging.error("Invalid File path")
+        return False
+    else:
+        return True
+
 
 def ipmode(ip):
     print("---------------------------------------\n" + ip + "\n---------------------------------------")
-    try:
-        vt = virusTotalIP(ip)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        vt = C.NONE
-    except:
-        vt = C.NONE
-    print(C.VT + ": " + vt)
+    vt = virusTotalIP(ip)
     try:
         abip = abusedIP(ip)
     except:
@@ -480,6 +591,7 @@ def ipmode(ip):
         try:
             ct = ss.ciscoTalos(ip)
         except Exception as e:
+            logging.error(e)
             ct = C.NONE
         print(C.CISCO + ": " + ct)
     data = [ip, ibm_rec, vt, abip, fg, ath0]
@@ -490,15 +602,7 @@ def ipmode(ip):
 
 def urlmode(url):
     print("---------------------------------------\n" + url + "\n---------------------------------------")
-    try:
-        vt = virusTotalURL(url)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        vt = C.NONE
-    except:
-        vt = C.NONE
-    print(C.VT + ": " + vt)
+    vt = virusTotalURL(url)
     try:
         ibm_rec = IBM_URL(url)
     except:
@@ -527,13 +631,15 @@ def urlmode(url):
             usc = urlscan(url)
             uscuuid = usc[1]
             usc = usc[0]
-        except:
+        except Exception as e:
+            logging.error(e)
             usc = C.NONE
             uscuuid = C.NONE
         print(C.URLSCAN + ": " + usc)
         try:
             ct = ss.ciscoTalos(url)
         except Exception as e:
+            logging.error(e)
             ct = C.NONE
         print(C.CISCO + ": " + ct)
     data = [url, ibm_rec, vt, gsb, pt]
@@ -546,32 +652,13 @@ def urlmode(url):
 
 def hashmode(a_hash):
     print("---------------------------------------\nChecking:   " + a_hash)
-    try:
-        data = virusTotalHash(a_hash)
-        print(C.VT + ": " + str(data[4]))
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        print(C.VT + ": " + C.NONE)
-        data = [a_hash, C.NONE, C.NONE, C.NONE, C.NONE]
-    except:
-        data = [a_hash, C.NONE, C.NONE, C.NONE, C.NONE]
-        print(C.VT + ": " + C.NONE)
-    return data
+    return virusTotalHash(a_hash)
 
 
 def filemode(a_file):
     print("---------------------------------------\nChecking:   " + a_file)
-    try:
-        resp = virusTotalFile(a_file)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        resp = C.NONE
-    except:
-        resp = C.NONE
-    print(C.VT + ": " + str(resp))
-    data = [a_file, resp]
+    vt = virusTotalFile(a_file)
+    data = [a_file, vt]
     return data
 
 
@@ -624,9 +711,11 @@ if __name__ == "__main__":
             if ss_mode:
                 ss.makeFileName(file_to_read)
             if mode == C.IP_MODE:
-                ipmode(file_to_read)
+                if isIP(file_to_read):
+                    ipmode(file_to_read)
             elif mode == C.URL_MODE:
-                urlmode(file_to_read)
+                if isURL(file_to_read):
+                    urlmode(file_to_read)
             elif mode == C.HASH_MODE:
                 res = hashmode(file_to_read)
                 print("md5: " + res[1])
@@ -637,7 +726,7 @@ if __name__ == "__main__":
             file_data = open(file_to_read, 'r').read().split('\n')
             if mode == C.IP_MODE:
                 for addr in file_data:
-                    if addr == "":
+                    if not isIP(addr):
                         continue
                     if ss_mode:
                         ss.makeFileName(addr)
@@ -645,7 +734,7 @@ if __name__ == "__main__":
                     save_record(dataset, C.IP_MODE)
             elif mode == C.URL_MODE:
                 for link in file_data:
-                    if link == "":
+                    if not isURL(link):
                         continue
                     if ss_mode:
                         ss.makeFileName(link)
@@ -654,7 +743,7 @@ if __name__ == "__main__":
             elif mode == C.FILE_MODE:
                 for f in file_data:
                     startFileTime = time()
-                    if f == "":
+                    if not isFile(f):
                         continue
                     dataset = filemode(f)
                     save_record(dataset, C.FILE_MODE)
