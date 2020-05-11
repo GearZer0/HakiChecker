@@ -341,7 +341,7 @@ def abusedIP(ip):
         if error[0]['status'] == 429 or error[0]['status'] == 401:
             print(C.ABIP + ": " + error[0]['detail'])
         elif str(error[0]['status']).startswith('5'):
-            print(C.ABIP + ": AbusedIPDB is having problems. Please try again later")
+            print(C.ABIP + C.EX_SERVER.format(C.ABIP))
         logging.error(C.ABIP + " - virusTotalHash() - " + error[0]['detail'])
     finally:
         print(C.ABIP + ": " + rate)
@@ -351,12 +351,18 @@ def abusedIP(ip):
 
 def getScreenshotIBM(obj):
     rate = ss.IBM(obj)
-    if rate == "Unknown":
-        rate = C.NONE
-    else:
-        rate + " out of 10"
+    print(C.IBM + ": " + rate)
     logging.info(C.IBM + " - " + rate)
     return rate
+
+def IBM_exceptionHandle(resp):
+    logging.error(C.IBM + " - " + str(resp.json()))
+    if resp.status_code == 402:
+        print(C.IBM + ": Monthly quota exceeded")
+    elif resp.status_code == 401:
+        print(C.IBM + ": Not Authorized. Check API key and pass")
+    elif str(resp.status_code).startswith('5'):
+        print(C.IBM + C.EX_SERVER.format(C.IBM))
 
 
 # call to this function when url mode on
@@ -364,22 +370,19 @@ def IBM_URL(url):
     if ss_mode:
         return getScreenshotIBM(url)
     else:
-        try:
-            resp = requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers)
-            rate = str(resp.json()['result']['score']) + " out of 10"
-        except:
+        resp = requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers)
+        if str(resp.status_code).startswith('2'):
+            try:
+                rate = str(resp.json()['result']['score']) + " out of 10"
+            except:
+                rate = C.UNKNOWN
+        else:
             rate = C.NONE
-            logging.error(C.IBM + " - " + str(resp.json()))
-            if resp.status_code == 402:
-                print(C.IBM + ": Monthly quota exceeded")
-            elif resp.status_code == 401:
-                print(C.IBM + ": Not Authorized. Check API key and pass")
-            elif str(resp.status_code).startswith('5'):
-                print(C.IBM + ": IBM is having problems. Please try again later")
-        finally:
-            print(C.IBM + ": " + rate)
-            logging.info(C.IBM + " - " + rate)
-            return rate
+            IBM_exceptionHandle(resp)
+
+        print(C.IBM + ": " + rate)
+        logging.info(C.IBM + " - " + rate)
+        return rate
 
 
 # call to this function when ip mode on
@@ -387,22 +390,19 @@ def IBM_IP(ip):
     if ss_mode:
         return getScreenshotIBM(ip)
     else:
-        try:
-            resp = requests.get(C.IBM_IP.format(ip), headers=ibm_headers)
-            rate = str(resp.json()['history'][-1]['score']) + " out of 10"
-        except:
+        resp = requests.get(C.IBM_IP.format(ip), headers=ibm_headers)
+        if str(resp.status_code).startswith('2'):
+            try:
+                rate = str(resp.json()['history'][-1]['score']) + " out of 10"
+            except:
+                rate = C.UNKNOWN
+        else:
             rate = C.NONE
-            logging.error(C.IBM + " - " + str(resp.json()))
-            if resp.status_code == 402:
-                print(C.IBM + ": Monthly quota exceeded")
-            elif resp.status_code == 401:
-                print(C.IBM + ": Unauthorized. Check API key and pass")
-            elif str(resp.status_code).startswith('5'):
-                print(C.IBM + ": IBM is having problems. Please try again later")
-        finally:
-            print(C.IBM + ": " + rate)
-            logging.info(C.IBM + " - " + rate)
-            return rate
+            IBM_exceptionHandle(resp)
+
+        print(C.IBM + ": " + rate)
+        logging.info(C.IBM + " - " + rate)
+        return rate
 
 
 def getFGKey():
@@ -433,7 +433,8 @@ def fraudGuard(ip):
     password = get_key.split(':')[1]
     resp = requests.get(C.FG_IP.format(ip), verify=True, auth=HTTPBasicAuth(username, password))
     if resp.status_code == 429:
-        print("API limit reached, changing username:password")
+        print(C.FG + ": API limit reached, changing username:password")
+        logging.warning(C.FG + " - API limit reached, changing username:password")
         removeOldFGKey(get_key)
         return fraudGuard(ip)
     try:
@@ -464,7 +465,7 @@ def urlscan(url):
         uuid = C.NONE
         logging.exception(C.URLSCAN + " - " + str(resp.json()))
         if resp.status_code == 401:
-            print(C.URLSCAN + ": Unauthorized. Check API key")
+            print(C.URLSCAN + C.EX_UNAUTH)
     else:
         begin = time()
         time_elapsed = 0
@@ -547,7 +548,6 @@ def auth0(ip):
         print(C.AUTH0 + ": " + score)
         logging.info(C.AUTH0 + " - " + score)
         return score
-
 
 
 # def hybrid(url):

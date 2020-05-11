@@ -131,8 +131,12 @@ class Screenshot(object):
         element_present = EC.presence_of_element_located((By.ID, 'report'))
         WebDriverWait(driver, timeout).until(element_present)
         ## To print score
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
+        try:
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
+            riskLevel = str(riskLevel) + " out of 10"
+        except:
+            riskLevel = C.NONE
         try:
             driver.save_screenshot(self.imageName.format(C.IBM))
             print(C.IBM + ": " + C.SS_SAVED)

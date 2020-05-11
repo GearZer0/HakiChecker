@@ -3,6 +3,7 @@ from datetime import datetime
 
 # String constants
 NONE = "N/A"
+UNKNOWN = "Unknown"
 SS_SAVED = "Screenshot saved"
 SS_FAILED = "Failed to save screenshot"
 EX_SERVER = ": {} is having problems. Please try again later."
