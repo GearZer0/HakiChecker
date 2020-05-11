@@ -340,6 +340,8 @@ def abusedIP(ip):
         error = resp['errors']
         if error[0]['status'] == 429 or error[0]['status'] == 401:
             print(C.ABIP + ": " + error[0]['detail'])
+        elif str(error[0]['status']).startswith('5'):
+            print(C.ABIP + ": AbusedIPDB is having problems. Please try again later")
         logging.error(C.ABIP + " - virusTotalHash() - " + error[0]['detail'])
     finally:
         print(C.ABIP + ": " + rate)
@@ -372,6 +374,8 @@ def IBM_URL(url):
                 print(C.IBM + ": Monthly quota exceeded")
             elif resp.status_code == 401:
                 print(C.IBM + ": Not Authorized. Check API key and pass")
+            elif str(resp.status_code).startswith('5'):
+                print(C.IBM + ": IBM is having problems. Please try again later")
         finally:
             print(C.IBM + ": " + rate)
             logging.info(C.IBM + " - " + rate)
@@ -392,7 +396,9 @@ def IBM_IP(ip):
             if resp.status_code == 402:
                 print(C.IBM + ": Monthly quota exceeded")
             elif resp.status_code == 401:
-                print(C.IBM + ": Not Authorized. Check API key and pass")
+                print(C.IBM + ": Unauthorized. Check API key and pass")
+            elif str(resp.status_code).startswith('5'):
+                print(C.IBM + ": IBM is having problems. Please try again later")
         finally:
             print(C.IBM + ": " + rate)
             logging.info(C.IBM + " - " + rate)
@@ -430,8 +436,19 @@ def fraudGuard(ip):
         print("API limit reached, changing username:password")
         removeOldFGKey(get_key)
         return fraudGuard(ip)
-    rate = json.loads(resp.text)['risk_level']
-    return rate + " out of 5"
+    try:
+        rate = json.loads(resp.text)['risk_level'] + " out of 5"
+    except:
+        rate = C.NONE
+        logging.error(C.FG + " - " + str(resp.text))
+        if resp.status_code == 401:
+            print(C.FG + ": Unauthorised. Check credentials")
+        if str(resp.status_code).startswith('5'):
+            print(C.FG + ": FraudGaurd is having problems. Please try again later")
+    finally:
+        print(C.FG + ": " + rate)
+        logging.info(C.FG + " - " + rate)
+        return rate
 
 
 def urlscan(url):
@@ -600,11 +617,7 @@ def ipmode(ip):
     print("---------------------------------------\n" + ip + "\n---------------------------------------")
     vt = virusTotalIP(ip)
     abip = abusedIP(ip)
-    try:
-        fg = fraudGuard(ip)
-    except:
-        fg = C.NONE
-    print(C.FG + ": " + fg)
+    fg = fraudGuard(ip)
     ibm_rec = IBM_IP(ip)
     try:
         ath0 = auth0(ip)
