@@ -134,7 +134,8 @@ class Screenshot(object):
         try:
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
-            riskLevel = str(riskLevel) + " out of 10"
+            if riskLevel != "Unknown":
+                riskLevel = str(riskLevel) + " out of 10"
         except:
             riskLevel = C.NONE
         try:

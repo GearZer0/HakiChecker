@@ -92,7 +92,7 @@ def save_record(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if not data[1].startswith("1 out") and data[1] != C.NONE:
+            if not data[1].startswith("1 out") and data[1] != C.NONE and data[1] != C.UNKNOWN:
                 nonzero += 1
             if not data[2].startswith("0 out") and data[2] != C.NONE:
                 nonzero += 1
@@ -123,13 +123,13 @@ def save_record(data, formula):
                 writer.writeheader()
             malic = "Safe"
             nonzero = 0
-            if not data[1].startswith("1 out") and data[1] != C.NONE:  # IBM
+            if not data[1].startswith("1 out") and data[1] != C.NONE and data[1] != C.UNKNOWN:  # IBM
                 nonzero += 1
             if not data[2].startswith("0 out") and data[2] != C.NONE:  # VT
                 nonzero += 1
             if not data[3].startswith("Safe") and data[4] != C.NONE:  # Google
                 nonzero += 1
-            if data[4] and data[4] != C.NONE:  # PhishTank
+            if data[4] and data[4] != C.NONE and data[4] != C.UNKNOWN:  # PhishTank
                 nonzero += 1
             if ss_mode and not data[5].startswith("0 out") and data[5] != C.NONE:  # URLscan
                 nonzero += 1
@@ -526,6 +526,7 @@ def googleSafe(url):
         logging.error(C.GOOGLE + " - " + str(resp.json()))
     print(C.GOOGLE + ": " + gsb)
     logging.info(C.GOOGLE + " - " + gsb)
+    return gsb
 
 
 def auth0(ip):
@@ -597,7 +598,7 @@ def phishtank(url):
             else:  # if verified as not a phish
                 result = False
         else:  # if result not found in database
-            result = "Unknown"
+            result = C.UNKNOWN
     else:
         result = C.NONE
         logging.error(C.PHISH + " - " + str(resp.json()))
