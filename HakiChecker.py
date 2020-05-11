@@ -331,12 +331,19 @@ def abusedIP(ip):
         'Key': key.get("abip_key"),
         'Accept': 'application/json',
     }
-    params = {
-        'ipAddress': ip,
-    }
-    resp = json.loads(requests.get(C.ABIP_IP, headers=headers, params=params).text)
-    rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
-    return rate
+    params = {'ipAddress': ip }
+    try:
+        resp = json.loads(requests.get(C.ABIP_IP, headers=headers, params=params).text)
+        rate = str(resp['data']["abuseConfidenceScore"]) + " out of 100"
+    except:
+        rate = C.NONE
+        error = resp['errors']
+        if error[0]['status'] == 429 or error[0]['status'] == 401:
+            print(C.ABIP + ": " + error[0]['detail'])
+        logging.error(C.ABIP + " - virusTotalHash() - " + error[0]['detail'])
+    finally:
+        print(C.ABIP + ": " + rate)
+        return rate
 
 
 def getScreenshotIBM(obj):
@@ -352,9 +359,13 @@ def IBM_URL(url):
     if ss_mode:
         return getScreenshotIBM(url)
     else:
-        resp = json.loads(requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers).text)
-        rate = str(resp['result']['score']) + " out of 10"
-        return rate
+        try:
+            resp = json.loads(requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers).text)
+            rate = str(resp['result']['score']) + " out of 10"
+        except:
+            rate = C.NONE
+        finally:
+            return rate
 
 
 # call to this function when ip mode on
@@ -566,38 +577,34 @@ def isFile(file):
 
 def ipmode(ip):
     print("---------------------------------------\n" + ip + "\n---------------------------------------")
-    vt = virusTotalIP(ip)
-    try:
-        abip = abusedIP(ip)
-    except:
-        abip = C.NONE
-    print(C.ABIP + ": " + abip)
-    try:
-        fg = fraudGuard(ip)
-    except:
-        fg = C.NONE
-    print(C.FG + ": " + fg)
-    try:
-        ibm_rec = IBM_IP(ip)
-    except:
-        ibm_rec = C.NONE
-    print(C.IBM + ": " + ibm_rec)
-    try:
-        ath0 = auth0(ip)
-    except:
-        ath0 = C.NONE
-    print(C.AUTH0 + ": " + str(ath0))
-    if ss_mode:
-        try:
-            ct = ss.ciscoTalos(ip)
-        except Exception as e:
-            logging.error(e)
-            ct = C.NONE
-        print(C.CISCO + ": " + ct)
-    data = [ip, ibm_rec, vt, abip, fg, ath0]
-    if ss_mode:
-        data.append(ct)
-    return data
+    # vt = virusTotalIP(ip)
+    abip = abusedIP(ip)
+    # try:
+    #     fg = fraudGuard(ip)
+    # except:
+    #     fg = C.NONE
+    # print(C.FG + ": " + fg)
+    # try:
+    #     ibm_rec = IBM_IP(ip)
+    # except:
+    #     ibm_rec = C.NONE
+    # print(C.IBM + ": " + ibm_rec)
+    # try:
+    #     ath0 = auth0(ip)
+    # except:
+    #     ath0 = C.NONE
+    # print(C.AUTH0 + ": " + str(ath0))
+    # if ss_mode:
+    #     try:
+    #         ct = ss.ciscoTalos(ip)
+    #     except Exception as e:
+    #         logging.error(e)
+    #         ct = C.NONE
+    #     print(C.CISCO + ": " + ct)
+    # data = [ip, ibm_rec, vt, abip, fg, ath0]
+    # if ss_mode:
+    #     data.append(ct)
+    # return data
 
 
 def urlmode(url):

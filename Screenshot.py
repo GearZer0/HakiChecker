@@ -218,6 +218,7 @@ class Screenshot(object):
                 WebDriverWait(driver, timeout).until(element_present)
                 print(C.CISCO + ": Please go to {} to check if captcha is required and complete it once"
                       .format(C.CISCO_SS + quote(iporurl)))
+                logging.critical(C.CISCO + " - Recaptcha is required")
             except:
                 pass
         finally:
