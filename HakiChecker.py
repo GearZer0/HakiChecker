@@ -537,8 +537,17 @@ def auth0(ip):
         "Accept": "application/json",
         "X-Auth-Token": key.get("auth0_key")
     }
-    resp = requests.get(C.AUTH0_IP.format(ip), headers=headers).json()
-    return str(resp['fullip']['score']).strip()
+    try:
+        resp = requests.get(C.AUTH0_IP.format(ip), headers=headers).json()
+        score = str(resp['fullip']['score']).strip()
+    except:
+        score = C.NONE
+        logging.exception(C.AUTH0 + " - " + str(resp))
+    finally:
+        print(C.AUTH0 + ": " + score)
+        logging.info(C.AUTH0 + " - " + score)
+        return
+
 
 
 # def hybrid(url):
@@ -636,11 +645,7 @@ def ipmode(ip):
     abip = abusedIP(ip)
     fg = fraudGuard(ip)
     ibm_rec = IBM_IP(ip)
-    try:
-        ath0 = auth0(ip)
-    except:
-        ath0 = C.NONE
-    print(C.AUTH0 + ": " + str(ath0))
+    ath0 = auth0(ip)
     if ss_mode:
         try:
             ct = ss.ciscoTalos(ip)
