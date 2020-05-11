@@ -597,7 +597,7 @@ def phishtank(url):
             else:  # if verified as not a phish
                 result = False
         else:  # if result not found in database
-            result = C.UNKNOWN
+            result = "Unknown"
     else:
         result = C.NONE
         logging.error(C.PHISH + " - " + str(resp.json()))
@@ -652,15 +652,9 @@ def ipmode(ip):
     fg = fraudGuard(ip)
     ibm_rec = IBM_IP(ip)
     ath0 = auth0(ip)
-    if ss_mode:
-        try:
-            ct = ss.ciscoTalos(ip)
-        except Exception as e:
-            logging.error(e)
-            ct = C.NONE
-        print(C.CISCO + ": " + ct)
     data = [ip, ibm_rec, vt, abip, fg, ath0]
     if ss_mode:
+        ct = ss.ciscoTalos(ip)
         data.append(ct)
     return data
 
@@ -671,19 +665,12 @@ def urlmode(url):
     ibm_rec = IBM_URL(url)
     gsb = googleSafe(url)
     pt = phishtank(url)
-
+    data = [url, ibm_rec, vt, gsb, pt]
     if ss_mode:
         usc = urlscan(url)
         uscuuid = usc[1]
         usc = usc[0]
-        try:
-            ct = ss.ciscoTalos(url)
-        except Exception as e:
-            logging.error(e)
-            ct = C.NONE
-        print(C.CISCO + ": " + ct)
-    data = [url, ibm_rec, vt, gsb, pt]
-    if ss_mode:
+        ct = ss.ciscoTalos(url)
         data.append(usc)
         data.append(uscuuid)
         data.append(ct)

@@ -211,6 +211,7 @@ class Screenshot(object):
             print(C.CISCO + ": " + C.SS_SAVED)
             logging.info(C.CISCO + " - Screenshot saved at " + self.imageName.format(C.CISCO))
         except WebDriverException:
+            web_reputation = C.NONE
             logging.exception(C.CISCO + " - Screenshot")
             print(C.CISCO + ": " + C.SS_FAILED)
             try:
@@ -223,8 +224,8 @@ class Screenshot(object):
                 pass
         finally:
             driver.quit()
-            if web_reputation == "Unknown":
-                web_reputation = C.NONE
+            print(C.CISCO + ": " + web_reputation)
+            logging.info(C.CISCO_SS + " - " + web_reputation)
             return web_reputation
 
     # For url and ip
