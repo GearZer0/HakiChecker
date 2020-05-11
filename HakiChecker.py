@@ -656,42 +656,42 @@ def ipmode(ip):
 
 def urlmode(url):
     print("---------------------------------------\n" + url + "\n---------------------------------------")
-    # vt = virusTotalURL(url)
-    # ibm_rec = IBM_URL(url)
-    # try:
-    #     gsb = googleSafe(url)
-    # except Exception as error:
-    #     if str(error) != "":
-    #         print(str(error))
-    #     gsb = C.NONE
-    # except:
-    #     gsb = C.NONE
-    # print(C.GOOGLE + ": " + gsb)
-    # try:
-    #     pt = phishtank(url)
-    # except Exception as error:
-    #     if str(error) != "":
-    #         print(str(error))
-    #     pt = C.NONE
-    # except:
-    #     pt = C.NONE
-    # print(C.PHISH + ": " + str(pt))
+    vt = virusTotalURL(url)
+    ibm_rec = IBM_URL(url)
+    try:
+        gsb = googleSafe(url)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        gsb = C.NONE
+    except:
+        gsb = C.NONE
+    print(C.GOOGLE + ": " + gsb)
+    try:
+        pt = phishtank(url)
+    except Exception as error:
+        if str(error) != "":
+            print(str(error))
+        pt = C.NONE
+    except:
+        pt = C.NONE
+    print(C.PHISH + ": " + str(pt))
     if ss_mode:
         usc = urlscan(url)
         uscuuid = usc[1]
         usc = usc[0]
-    #     try:
-    #         ct = ss.ciscoTalos(url)
-    #     except Exception as e:
-    #         logging.error(e)
-    #         ct = C.NONE
-    #     print(C.CISCO + ": " + ct)
-    # data = [url, ibm_rec, vt, gsb, pt]
-    # if ss_mode:
-    #     data.append(usc)
-    #     data.append(uscuuid)
-    #     data.append(ct)
-    # return data
+        try:
+            ct = ss.ciscoTalos(url)
+        except Exception as e:
+            logging.error(e)
+            ct = C.NONE
+        print(C.CISCO + ": " + ct)
+    data = [url, ibm_rec, vt, gsb, pt]
+    if ss_mode:
+        data.append(usc)
+        data.append(uscuuid)
+        data.append(ct)
+    return data
 
 
 def hashmode(a_hash):
