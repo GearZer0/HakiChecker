@@ -457,18 +457,18 @@ def urlscan(url):
     try:
         # send scan request
         resp = requests.post(C.URLSCAN_URL, data=data, headers=headers)
-        uuid = json.loads(resp.text)['uuid']
-        nextpage = json.loads(resp.text['api'])
-        result = requests.get(nextpage)
+        uuid = resp.json()['uuid']
+        nextpage = resp.json()['api']
     except:
         score = C.NONE
         uuid = C.NONE
-        logging.error(C.URLSCAN + " - " + str(resp.json()))
+        logging.exception(C.URLSCAN + " - " + str(resp.json()))
         if resp.status_code == 401:
             print(C.URLSCAN + ": Unauthorized. Check API key")
     else:
         begin = time()
         time_elapsed = 0
+        result = requests.get(nextpage)
         # repeat until url has finished scanning. Max time is 65seconds
         while result.status_code == 404 and time_elapsed < 65:
             sleep(5)
@@ -656,42 +656,42 @@ def ipmode(ip):
 
 def urlmode(url):
     print("---------------------------------------\n" + url + "\n---------------------------------------")
-    vt = virusTotalURL(url)
-    ibm_rec = IBM_URL(url)
-    try:
-        gsb = googleSafe(url)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        gsb = C.NONE
-    except:
-        gsb = C.NONE
-    print(C.GOOGLE + ": " + gsb)
-    try:
-        pt = phishtank(url)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        pt = C.NONE
-    except:
-        pt = C.NONE
-    print(C.PHISH + ": " + str(pt))
+    # vt = virusTotalURL(url)
+    # ibm_rec = IBM_URL(url)
+    # try:
+    #     gsb = googleSafe(url)
+    # except Exception as error:
+    #     if str(error) != "":
+    #         print(str(error))
+    #     gsb = C.NONE
+    # except:
+    #     gsb = C.NONE
+    # print(C.GOOGLE + ": " + gsb)
+    # try:
+    #     pt = phishtank(url)
+    # except Exception as error:
+    #     if str(error) != "":
+    #         print(str(error))
+    #     pt = C.NONE
+    # except:
+    #     pt = C.NONE
+    # print(C.PHISH + ": " + str(pt))
     if ss_mode:
         usc = urlscan(url)
         uscuuid = usc[1]
         usc = usc[0]
-        try:
-            ct = ss.ciscoTalos(url)
-        except Exception as e:
-            logging.error(e)
-            ct = C.NONE
-        print(C.CISCO + ": " + ct)
-    data = [url, ibm_rec, vt, gsb, pt]
-    if ss_mode:
-        data.append(usc)
-        data.append(uscuuid)
-        data.append(ct)
-    return data
+    #     try:
+    #         ct = ss.ciscoTalos(url)
+    #     except Exception as e:
+    #         logging.error(e)
+    #         ct = C.NONE
+    #     print(C.CISCO + ": " + ct)
+    # data = [url, ibm_rec, vt, gsb, pt]
+    # if ss_mode:
+    #     data.append(usc)
+    #     data.append(uscuuid)
+    #     data.append(ct)
+    # return data
 
 
 def hashmode(a_hash):
