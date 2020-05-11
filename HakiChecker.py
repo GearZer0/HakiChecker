@@ -475,10 +475,10 @@ def urlscan(url):
             result = requests.get(nextpage)
             time_elapsed = time() - begin
         try:
-            score = result.json()['verdicts']['overall']['score'] + " out of 100"
+            score = str(result.json()['verdicts']['overall']['score']) + " out of 100"
         except:
             score = C.NONE
-            logging.error(C.URLSCAN + " - " + str(result.json()))
+            logging.exception(C.URLSCAN + " - " + str(result.json()))
         finally:
             with open(ss.imageName.format(""), "wb+") as img_sc:
                 try:
