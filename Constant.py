@@ -5,6 +5,8 @@ from datetime import datetime
 NONE = "N/A"
 SS_SAVED = "Screenshot saved"
 SS_FAILED = "Failed to save screenshot"
+EX_SERVER = ": {} is having problems. Please try again later."
+EX_UNAUTH = ": Unauthorized. Please check API key"
 
 # Modes
 IP_MODE = 'ip'

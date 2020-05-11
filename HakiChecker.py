@@ -496,15 +496,6 @@ def urlscan(url):
         return [str(score), uuid]
 
 
-def checkExceptionGS(code):
-    if code == 403:
-        raise Exception("ERROR: Please verify API KEY!")
-    elif code == 429:
-        raise Exception("ERROR: Requests Exceeded!")
-    elif code != 200:
-        raise Exception("")
-
-
 def googleSafe(url):
     if ss_mode:
         if ss.googleSafe(url):
@@ -520,11 +511,20 @@ def googleSafe(url):
             "threatEntryTypes": ["URL"],
             "threatEntries": [{"url": url}]}}
     resp = requests.post(C.GOOGLE_URL + key.get("google_key"), data=json.dumps(data))
-    checkExceptionGS(resp.status_code)
-    if "matches" in resp.json().keys():
-        return resp.json()["matches"][0]["threatType"]
+    if resp.status_code == 200:
+        if "matches" in resp.json().keys():
+            gsb = resp.json()["matches"][0]["threatType"]
+        else:
+            gsb = "Safe"
     else:
-        return "Safe"
+        gsb = C.NONE
+        if resp.status_code == 429:
+            print(C.GOOGLE + ": Requests Exceeded!")
+        elif str(resp.status_code).startswith('5'):
+            print(C.GOOGLE + C.EX_SERVER.format(C.GOOGLE))
+        logging.error(C.GOOGLE + " - " + str(resp.json()))
+    print(C.GOOGLE + ": " + gsb)
+    logging.info(C.GOOGLE + " - " + gsb)
 
 
 def auth0(ip):
@@ -658,15 +658,7 @@ def urlmode(url):
     print("---------------------------------------\n" + url + "\n---------------------------------------")
     vt = virusTotalURL(url)
     ibm_rec = IBM_URL(url)
-    try:
-        gsb = googleSafe(url)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        gsb = C.NONE
-    except:
-        gsb = C.NONE
-    print(C.GOOGLE + ": " + gsb)
+    gsb = googleSafe(url)
     try:
         pt = phishtank(url)
     except Exception as error:
