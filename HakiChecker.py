@@ -542,11 +542,11 @@ def auth0(ip):
         score = str(resp['fullip']['score']).strip()
     except:
         score = C.NONE
-        logging.exception(C.AUTH0 + " - " + str(resp))
+        logging.exception(C.AUTH0 + " - " + str(resp.json()))
     finally:
         print(C.AUTH0 + ": " + score)
         logging.info(C.AUTH0 + " - " + score)
-        return
+        return score
 
 
 
@@ -587,19 +587,25 @@ def phishtank(url):
         "User-Agent": "phishtank/" + key.get("phish_user")
     }
     resp = requests.post(C.PHISH_URL, headers=headers, data=data)
-    if resp.status_code == 509:
-        raise Exception("ERROR: Requests Exceeded! Please wait at most 5 minutes to reset the number of requests.")
-    elif resp.status_code != 200:
-        raise Exception("")
 
-    if resp.json()['results']['in_database']:  # if it exists in database
-        if not resp.json()['results']['verified']:  # if pending verification return malicious
-            return "Questionable"
-        elif resp.json()['results']['verified'] and resp.json()['results']['valid']:  # if phish return malicious
-            return "Phish"
-        else:  # if verified as not a phish
-            return False
-    return False  # if not in database
+    if resp.status_code == 200:
+        if resp.json()['results']['in_database']:  # if it exists in database
+            if not resp.json()['results']['verified']:  # if pending verification return malicious
+                result = "Questionable"
+            elif resp.json()['results']['verified'] and resp.json()['results']['valid']:  # if phish return malicious
+                result = "Phish"
+            else:  # if verified as not a phish
+                result = False
+        else:  # if result not found in database
+            result = C.UNKNOWN
+    else:
+        result = C.NONE
+        logging.error(C.PHISH + " - " + str(resp.json()))
+        if resp.status_code == 509:
+            print(C.PHISH + ": Requests Exceeded! Please wait at most 5 minutes to reset the number of requests.")
+    print(C.PHISH + ": " + str(result))
+    logging.info(C.PHISH + " - " + str(result))
+    return result
 
 def isIP(ip):
     if ip == "":
@@ -664,15 +670,8 @@ def urlmode(url):
     vt = virusTotalURL(url)
     ibm_rec = IBM_URL(url)
     gsb = googleSafe(url)
-    try:
-        pt = phishtank(url)
-    except Exception as error:
-        if str(error) != "":
-            print(str(error))
-        pt = C.NONE
-    except:
-        pt = C.NONE
-    print(C.PHISH + ": " + str(pt))
+    pt = phishtank(url)
+
     if ss_mode:
         usc = urlscan(url)
         uscuuid = usc[1]

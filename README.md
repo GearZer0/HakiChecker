@@ -169,7 +169,8 @@ requests per 5 minute**.
 
 Score Definition:
 ```
-False:          The URL is determined as not a phish or it does not exists in the database
+Unknown:        The URL does not exist in the database
+False:          The URL is determined as not a phish
 Questionable:   Phishtank is in the process of determining whether the URL which was reported is a phish
 Phish:          Phishtank has detected the URL as a phish
 ```
