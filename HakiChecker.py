@@ -454,29 +454,46 @@ def fraudGuard(ip):
 def urlscan(url):
     headers = {"API-Key": key.get("urlscan_key")}
     data = {"url": url}
-    resp = requests.post(C.URLSCAN_URL, data=data, headers=headers).text
-    uuid = json.loads(resp)['uuid']
-    nextpage = json.loads(resp)['api']
-    result = requests.get(nextpage)
-    begin = time()
-    time_elapsed = 0
-    # repeat until url has finished scanning. Max time is 65seconds
-    while result.status_code == 404 and time_elapsed < 65:
-        sleep(5)
+    try:
+        # send scan request
+        resp = requests.post(C.URLSCAN_URL, data=data, headers=headers)
+        uuid = json.loads(resp.text)['uuid']
+        nextpage = json.loads(resp.text['api'])
         result = requests.get(nextpage)
-        time_elapsed = time() - begin
-    if ss.urlscan(uuid):
-        print(C.URLSCAN + ": " + C.SS_SAVED)
+    except:
+        score = C.NONE
+        uuid = C.NONE
+        logging.error(C.URLSCAN + " - " + str(resp.json()))
+        if resp.status_code == 401:
+            print(C.URLSCAN + ": Unauthorized. Check API key")
     else:
-        print(C.URLSCAN + ": " + C.SS_FAILED)
-    score = result.json()['verdicts']['overall']['score']
-    with open(ss.imageName.format(""), "wb+") as img_sc:
+        begin = time()
+        time_elapsed = 0
+        # repeat until url has finished scanning. Max time is 65seconds
+        while result.status_code == 404 and time_elapsed < 65:
+            sleep(5)
+            result = requests.get(nextpage)
+            time_elapsed = time() - begin
         try:
-            img_sc.write(requests.get(C.URLSCAN_SS_ORIGIN + uuid + ".png").content)
-            print(C.URLSCAN + ": Screenshot of target URL saved")
+            score = result.json()['verdicts']['overall']['score'] + " out of 100"
         except:
-            print(C.URLSCAN + ": Failed to save screenshot of target URL")
-    return [str(score) + " out of 100", uuid]
+            score = C.NONE
+            logging.error(C.URLSCAN + " - " + str(result.json()))
+        finally:
+            with open(ss.imageName.format(""), "wb+") as img_sc:
+                try:
+                    img_sc.write(requests.get(C.URLSCAN_SS_ORIGIN + uuid + ".png").content)
+                    print(C.URLSCAN + ": Screenshot of target URL saved")
+                except:
+                    print(C.URLSCAN + ": Failed to save screenshot of target URL")
+            if ss.urlscan(uuid):
+                print(C.URLSCAN + ": " + C.SS_SAVED)
+            else:
+                print(C.URLSCAN + ": " + C.SS_FAILED)
+    finally:
+        print(C.URLSCAN + ": " + score)
+        logging.info(C.URLSCAN + " - " + score)
+        return [str(score), uuid]
 
 
 def checkExceptionGS(code):
@@ -660,15 +677,9 @@ def urlmode(url):
         pt = C.NONE
     print(C.PHISH + ": " + str(pt))
     if ss_mode:
-        try:
-            usc = urlscan(url)
-            uscuuid = usc[1]
-            usc = usc[0]
-        except Exception as e:
-            logging.error(e)
-            usc = C.NONE
-            uscuuid = C.NONE
-        print(C.URLSCAN + ": " + usc)
+        usc = urlscan(url)
+        uscuuid = usc[1]
+        usc = usc[0]
         try:
             ct = ss.ciscoTalos(url)
         except Exception as e:
