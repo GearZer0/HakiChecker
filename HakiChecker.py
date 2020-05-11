@@ -343,15 +343,18 @@ def abusedIP(ip):
         logging.error(C.ABIP + " - virusTotalHash() - " + error[0]['detail'])
     finally:
         print(C.ABIP + ": " + rate)
+        logging.info(C.ABIP + " - " + rate)
         return rate
 
 
 def getScreenshotIBM(obj):
     rate = ss.IBM(obj)
     if rate == "Unknown":
-        return C.NONE
+        rate = C.NONE
     else:
-        return rate + " out of 10"
+        rate + " out of 10"
+    logging.info(C.IBM + " - " + rate)
+    return rate
 
 
 # call to this function when url mode on
@@ -360,11 +363,18 @@ def IBM_URL(url):
         return getScreenshotIBM(url)
     else:
         try:
-            resp = json.loads(requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers).text)
-            rate = str(resp['result']['score']) + " out of 10"
+            resp = requests.get(C.IBM_URL.format(quote(url)), headers=ibm_headers)
+            rate = str(resp.json()['result']['score']) + " out of 10"
         except:
             rate = C.NONE
+            logging.error(C.IBM + " - " + str(resp.json()))
+            if resp.status_code == 402:
+                print(C.IBM + ": Monthly quota exceeded")
+            elif resp.status_code == 401:
+                print(C.IBM + ": Not Authorized. Check API key and pass")
         finally:
+            print(C.IBM + ": " + rate)
+            logging.info(C.IBM + " - " + rate)
             return rate
 
 
@@ -373,9 +383,20 @@ def IBM_IP(ip):
     if ss_mode:
         return getScreenshotIBM(ip)
     else:
-        resp = json.loads(requests.get(C.IBM_IP.format(ip), headers=ibm_headers).text)
-        rate = str(resp['history'][-1]['score']) + " out of 10"
-        return rate
+        try:
+            resp = requests.get(C.IBM_IP.format(ip), headers=ibm_headers)
+            rate = str(resp.json()['history'][-1]['score']) + " out of 10"
+        except:
+            rate = C.NONE
+            logging.error(C.IBM + " - " + str(resp.json()))
+            if resp.status_code == 402:
+                print(C.IBM + ": Monthly quota exceeded")
+            elif resp.status_code == 401:
+                print(C.IBM + ": Not Authorized. Check API key and pass")
+        finally:
+            print(C.IBM + ": " + rate)
+            logging.info(C.IBM + " - " + rate)
+            return rate
 
 
 def getFGKey():
@@ -577,44 +598,36 @@ def isFile(file):
 
 def ipmode(ip):
     print("---------------------------------------\n" + ip + "\n---------------------------------------")
-    # vt = virusTotalIP(ip)
+    vt = virusTotalIP(ip)
     abip = abusedIP(ip)
-    # try:
-    #     fg = fraudGuard(ip)
-    # except:
-    #     fg = C.NONE
-    # print(C.FG + ": " + fg)
-    # try:
-    #     ibm_rec = IBM_IP(ip)
-    # except:
-    #     ibm_rec = C.NONE
-    # print(C.IBM + ": " + ibm_rec)
-    # try:
-    #     ath0 = auth0(ip)
-    # except:
-    #     ath0 = C.NONE
-    # print(C.AUTH0 + ": " + str(ath0))
-    # if ss_mode:
-    #     try:
-    #         ct = ss.ciscoTalos(ip)
-    #     except Exception as e:
-    #         logging.error(e)
-    #         ct = C.NONE
-    #     print(C.CISCO + ": " + ct)
-    # data = [ip, ibm_rec, vt, abip, fg, ath0]
-    # if ss_mode:
-    #     data.append(ct)
-    # return data
+    try:
+        fg = fraudGuard(ip)
+    except:
+        fg = C.NONE
+    print(C.FG + ": " + fg)
+    ibm_rec = IBM_IP(ip)
+    try:
+        ath0 = auth0(ip)
+    except:
+        ath0 = C.NONE
+    print(C.AUTH0 + ": " + str(ath0))
+    if ss_mode:
+        try:
+            ct = ss.ciscoTalos(ip)
+        except Exception as e:
+            logging.error(e)
+            ct = C.NONE
+        print(C.CISCO + ": " + ct)
+    data = [ip, ibm_rec, vt, abip, fg, ath0]
+    if ss_mode:
+        data.append(ct)
+    return data
 
 
 def urlmode(url):
     print("---------------------------------------\n" + url + "\n---------------------------------------")
     vt = virusTotalURL(url)
-    try:
-        ibm_rec = IBM_URL(url)
-    except:
-        ibm_rec = C.NONE
-    print(C.IBM + ": " + ibm_rec)
+    ibm_rec = IBM_URL(url)
     try:
         gsb = googleSafe(url)
     except Exception as error:
