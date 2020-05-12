@@ -376,6 +376,9 @@ def IBM_URL(url):
                 rate = str(resp.json()['result']['score']) + " out of 10"
             except:
                 rate = C.UNKNOWN
+        elif resp.status_code == 404:
+            rate = C.UNKNOWN
+            logging.warning(C.IBM + " - Not found in database")
         else:
             rate = C.NONE
             IBM_exceptionHandle(resp)
@@ -396,6 +399,9 @@ def IBM_IP(ip):
                 rate = str(resp.json()['history'][-1]['score']) + " out of 10"
             except:
                 rate = C.UNKNOWN
+        elif resp.status_code == 404:
+            rate = C.UNKNOWN
+            logging.warning(C.IBM + " - Not found in database")
         else:
             rate = C.NONE
             IBM_exceptionHandle(resp)
