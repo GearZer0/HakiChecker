@@ -13,9 +13,9 @@ import Constant as C
 # Selenium driver options
 options = Options()
 options.add_argument("--window-size=1680x1050")
-# options.add_experimental_option("excludeSwitches", ["enable-automation", 'enable-logging'])
-# options.add_experimental_option('useAutomationExtension', False)
-# options.add_argument("--headless")
+options.add_experimental_option("excludeSwitches", ["enable-automation", 'enable-logging'])
+options.add_experimental_option('useAutomationExtension', False)
+options.add_argument("--headless")
 timeout = 20
 
 
