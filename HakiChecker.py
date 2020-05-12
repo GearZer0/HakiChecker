@@ -342,7 +342,7 @@ def abusedIP(ip):
             print(C.ABIP + ": " + error[0]['detail'])
         elif str(error[0]['status']).startswith('5'):
             print(C.ABIP + C.EX_SERVER.format(C.ABIP))
-        logging.error(C.ABIP + " - virusTotalHash() - " + error[0]['detail'])
+        logging.error(C.ABIP + " - virusTotalHash() - " + str(error[0]['detail']))
     finally:
         print(C.ABIP + ": " + rate)
         logging.info(C.ABIP + " - " + rate)
@@ -550,7 +550,7 @@ def auth0(ip):
         score = str(resp['fullip']['score']).strip()
     except:
         score = C.NONE
-        logging.exception(C.AUTH0 + " - " + str(resp.json()))
+        logging.exception(C.AUTH0 + " - " + str(resp))
     finally:
         print(C.AUTH0 + ": " + score)
         logging.info(C.AUTH0 + " - " + score)
