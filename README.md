@@ -262,6 +262,10 @@ This may be due to a few reasons:
  5. Time out for URLscan.io => check network
 If this problem persists after retrying, please contact me via email. 
 
+##### Q: What should I do when there is a problem?
+A: There is a `hakichecker.log` available where users can firsthand take a look at the problem if they want. 
+When there are problems, please send me what is wrong (possibly with screenshots) and attach hakichecker.log in the email
+
 ### Source
 https://auth0.com/signals/docs/#get-full-ip-address-reputation-info
 https://faq.fraudguard.io/threat-levels
