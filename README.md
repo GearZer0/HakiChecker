@@ -27,26 +27,26 @@ It supports **screenshot mode** where screenshot of the OSINT results are taken 
 
 ## Safe or block?
 The url/ip should display "Safe" at the **Action** column of the output when it is their 
-default score (no IOC is found) or when the results are N/A ( which can mean unsuccessful or unknown). Everything 
+default score (no IOC is found) or when the results are N/A (which means it was unsuccessful). Everything 
 else will be flagged as "To block"
 
 Below are the Safe score (their default score if no IOC is found) 
 ```
   IP
-    - IBM : 1 out of 10 | N/A (if unknown)                           
+    - IBM : 1 out of 10 | Unknown                        
     - Virustotal: 0 out of x
     - AbuseIPDB : 0 out of 100
     - FraudGuard : 1 out of 5
     - Auth0 : 0
-    - CiscoTalos: Neutral | Favorable | Trusted | N/A (if unknown)  (Only for screenshot mode)
+    - CiscoTalos: Neutral | Favorable | Trusted | Unknown           (Only for screenshot mode)
 
    URL
     - Virustotal : 0 out of x
-    - IBM : 1 out of 10 | N/A (if unknown)  
+    - IBM : 1 out of 10 | Unknown
     - GoogleSafeBrowsing : Safe
-    - Phish Tank : False
+    - Phish Tank : False | Unknown
     - Urlscan.io : 0 out of 100                                     (Only for screenshot mode)
-    - CiscoTalos: Neutral | Favorable | Trusted | N/A (if unknown)  (Only for screenshot mode)
+    - CiscoTalos: Neutral | Favorable | Trusted | Unknown           (Only for screenshot mode)
 ```
 Anything other than the above (except N/A) will be flagged as "To block"
 
@@ -72,11 +72,14 @@ Example: Images/ip/8.8.8.8_IBM.png
 * Python 3 + pip
 * Git (optional)
 
-
 #### 2. Clone Repo or Download
 After installation of Git, type this into Git Bash. Note that this is just one of the many ways to clone a repository.
 ```
 git clone https://github.com/GearZer0/HakiChecker.git
+```
+Then install the requirements via:
+```
+pip install -r requirements.txt
 ```
 
 #### 3. Setup Screenshot Mode
