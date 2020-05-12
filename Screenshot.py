@@ -13,9 +13,9 @@ import Constant as C
 # Selenium driver options
 options = Options()
 options.add_argument("--window-size=1680x1050")
-options.add_experimental_option("excludeSwitches", ["enable-automation", 'enable-logging'])
-options.add_experimental_option('useAutomationExtension', False)
-options.add_argument("--headless")
+# options.add_experimental_option("excludeSwitches", ["enable-automation", 'enable-logging'])
+# options.add_experimental_option('useAutomationExtension', False)
+# options.add_argument("--headless")
 timeout = 20
 
 
@@ -116,6 +116,7 @@ class Screenshot(object):
     # for url and ip
     def IBM(self, obj):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
+        driver.implicitly_wait(5)
         driver.get(C.IBM_SS.format(quote(obj)))
         element_present = EC.presence_of_element_located((By.CLASS_NAME, 'modal-dialog'))
         WebDriverWait(driver, timeout).until(element_present)
@@ -168,6 +169,7 @@ class Screenshot(object):
 
     def virusTotal(self, obj):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
+        driver.implicitly_wait(5)
         target = obj
         identifier = self.mode
         if self.mode == C.URL_MODE:
