@@ -116,7 +116,7 @@ class Screenshot(object):
     # for url and ip
     def IBM(self, obj):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
-        driver.implicitly_wait(5)
+        # driver.implicitly_wait(5)
         driver.get(C.IBM_SS.format(quote(obj)))
         element_present = EC.presence_of_element_located((By.CLASS_NAME, 'modal-dialog'))
         WebDriverWait(driver, timeout).until(element_present)
@@ -127,18 +127,21 @@ class Screenshot(object):
             element = driver.find_element_by_xpath("//button[@ng-click='$ctrl.actionButtonHandler()']")
             driver.execute_script("arguments[0].click();", element)
         except WebDriverException:
+            logging.exception(C.IBM + " - Screenshot")
             pass
         # Make sure score element is there for screenshot
-        element_present = EC.presence_of_element_located((By.ID, 'report'))
-        WebDriverWait(driver, timeout).until(element_present)
+        # element_present = EC.presence_of_element_located((By.ID, 'report'))
+        # WebDriverWait(driver, timeout).until(element_present)
         ## To print score
         try:
+            driver.find_element_by_id('report')
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
             if riskLevel != "Unknown":
                 riskLevel = str(riskLevel) + " out of 10"
         except:
             riskLevel = C.NONE
+            logging.exception(C.IBM + " - Screenshot")
         try:
             driver.save_screenshot(self.imageName.format(C.IBM))
             print(C.IBM + ": " + C.SS_SAVED)
@@ -169,7 +172,7 @@ class Screenshot(object):
 
     def virusTotal(self, obj):
         driver = webdriver.Chrome(executable_path=self.key.get("drive"), options=options)
-        driver.implicitly_wait(5)
+        driver.implicitly_wait(3)
         target = obj
         identifier = self.mode
         if self.mode == C.URL_MODE:
@@ -183,13 +186,15 @@ class Screenshot(object):
             target = obj[0]
             self.makeFileName(obj)
         driver.get(C.VT_SS.format(identifier=identifier, target=target))
+
         try:
-            element_present = EC.presence_of_element_located((By.TAG_NAME, 'vt-virustotal-app'))
-            WebDriverWait(driver, timeout).until(element_present)
+            driver.find_element_by_tag_name('vt-virustotal-app')
+            # element_present = EC.presence_of_element_located((By.TAG_NAME, 'vt-virustotal-app'))
+            # WebDriverWait(driver, 1).until(element_present)
             ## To check scores are same with the VT API
             # root = str(driver.find_element_by_tag_name('vt-virustotal-app').text)
             # res = root.find("Community\nScore")
-            # substr = root[res-10:res-1]
+            # substr = root[res - 10:res - 1]
             # positives = int(''.join(list(filter(str.isdigit, substr.split("/")[0]))))
             # total = int(''.join(list(filter(str.isdigit, substr.split("/")[1]))))
             # rate = str(positives) + " out of " + str(total)
