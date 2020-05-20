@@ -412,14 +412,14 @@ def IBM_IP(ip):
 
 
 def getFGKey():
-    keys = open(C.FG_KEYS, 'r').read().split('\n')
+    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
     if keys == "":
         print("Are you sure about FG Keys availability?")
     return keys[0]
 
 
 def removeOldFGKey(get_key):
-    keys = open(C.FG_KEYS, 'r').read().split('\n')
+    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
     open(C.FG_KEYS, 'w+').close()
     with open(C.FG_KEYS, 'a+') as fl:
         for i in keys:
@@ -427,6 +427,9 @@ def removeOldFGKey(get_key):
                 fl.write(i + "\n")
         fl.write(get_key + "\n")
 
+def countKeyFG():
+    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
+    return len(keys)
 
 def fraudGuard(ip):
     if ss_mode:
@@ -438,11 +441,16 @@ def fraudGuard(ip):
     username = get_key.split(':')[0]
     password = get_key.split(':')[1]
     resp = requests.get(C.FG_IP.format(ip), verify=True, auth=HTTPBasicAuth(username, password))
-    if resp.status_code == 429:
+    count = 1
+    while resp.status_code == 429 and count <= countKeyFG():
         print(C.FG + ": API limit reached, changing username:password")
         logging.warning(C.FG + " - API limit reached, changing username:password")
         removeOldFGKey(get_key)
-        return fraudGuard(ip)
+        get_key = getFGKey()
+        username = get_key.split(':')[0]
+        password = get_key.split(':')[1]
+        resp = requests.get(C.FG_IP.format(ip), verify=True, auth=HTTPBasicAuth(username, password))
+        count += 1
     try:
         rate = json.loads(resp.text)['risk_level'] + " out of 5"
     except:
@@ -450,8 +458,10 @@ def fraudGuard(ip):
         logging.error(C.FG + " - " + str(resp.text))
         if resp.status_code == 401:
             print(C.FG + ": Unauthorised. Check credentials")
-        if str(resp.status_code).startswith('5'):
+        elif str(resp.status_code).startswith('5'):
             print(C.FG + ": FraudGaurd is having problems. Please try again later")
+        elif resp.status_code == 429:
+            print(C.FG + ": API limit reached for all FG keys")
     finally:
         print(C.FG + ": " + rate)
         logging.info(C.FG + " - " + rate)
