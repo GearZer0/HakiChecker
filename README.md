@@ -104,8 +104,8 @@ Screenshot mode and CiscoTalos uses selenium which requires a driver.
 ##### [Fraudguard.io:](https://fraudguard.io)
 FraudGuard provides API to check IP reputation. Its public API supports **1000 requests per month**.
 1. Login to fraudguard.io and get API KEY USERNAME and PASSWORD
-2. Input API KEY USERNAME and PASSWORD into `fraudguard.txt` in this format `USERNAME:PASSWORD`
-3. (optional) more than one API KEY into each line, it will rotate between different API KEY if the limit is exceeded
+2. Input API KEY USERNAME and PASSWORD into `config.txt` under `[FraudGuard]` in this format `USERNAME:PASSWORD`
+3. (optional) Can create more than 1 set of usernames and passwords and store in `config.txt` as `fg_keys = USERNAME:PASSWORD, USERNAME2:PASSWORD2`
 
 Score Definition:
 ```

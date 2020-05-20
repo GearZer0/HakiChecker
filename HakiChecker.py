@@ -19,6 +19,7 @@ import Screenshot
 # Specify where the output files should be stored in.
 output_directory = os.getcwd() + "/Results/"
 image_directory = os.getcwd() + "/Images/"
+log_directory = os.getcwd() + "/Logs/"
 
 # Constants that needs to be updated in init()
 vt_headers = {'Accept': 'application/json'}
@@ -32,8 +33,12 @@ single_mode = False
 
 
 def init():
+    try:
+        os.mkdir("Logs")
+    except FileExistsError as e:
+        pass
     # create logger
-    logging.basicConfig(filename="hakichecker.log", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")
+    logging.basicConfig(filename=log_directory + "hakichecker.log", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")
     # initialise all the api keys and apis from config.txt
     with open(C.CONFIG) as f:
         for line in f:
@@ -410,26 +415,12 @@ def IBM_IP(ip):
         logging.info(C.IBM + " - " + rate)
         return rate
 
-
-def getFGKey():
-    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
-    if keys == "":
-        print("Are you sure about FG Keys availability?")
-    return keys[0]
-
-
-def removeOldFGKey(get_key):
-    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
-    open(C.FG_KEYS, 'w+').close()
-    with open(C.FG_KEYS, 'a+') as fl:
-        for i in keys:
-            if i != get_key:
-                fl.write(i + "\n")
-        fl.write(get_key + "\n")
-
-def countKeyFG():
-    keys = open(C.FG_KEYS, 'r').read().strip().split('\n')
-    return len(keys)
+def removeOldFGKey(get_keys):
+    old = get_keys.pop(0)
+    get_keys.append(old)
+    if get_keys[0] == "":
+        get_keys.pop(0)
+    return get_keys
 
 def fraudGuard(ip):
     if ss_mode:
@@ -437,18 +428,25 @@ def fraudGuard(ip):
             print(C.FG + ": " + C.SS_SAVED)
         else:
             print(C.FG + ": " + C.SS_FAILED)
-    get_key = getFGKey()
-    username = get_key.split(':')[0]
-    password = get_key.split(':')[1]
+    get_keys = key.get("fg_keys").strip().split(',')
+    try:
+        username = get_keys[0].strip().split(':')[0]
+        password = get_keys[0].strip().split(':')[1]
+    except IndexError:
+        rate = C.NONE
+        logging.error(C.FG + " - " + "No API keys provided")
+        print(C.FG + ": API keys not provided in config.txt")
+        print(C.FG + ": " + rate)
+        logging.info(C.FG + " - " + rate)
+        return rate
     resp = requests.get(C.FG_IP.format(ip), verify=True, auth=HTTPBasicAuth(username, password))
     count = 1
-    while resp.status_code == 429 and count <= countKeyFG():
+    while resp.status_code == 429 and count <= len(get_keys):
         print(C.FG + ": API limit reached, changing username:password")
         logging.warning(C.FG + " - API limit reached, changing username:password")
-        removeOldFGKey(get_key)
-        get_key = getFGKey()
-        username = get_key.split(':')[0]
-        password = get_key.split(':')[1]
+        get_keys = removeOldFGKey(get_keys)
+        username = get_keys[0].strip().split(':')[0]
+        password = get_keys[0].strip().split(':')[1]
         resp = requests.get(C.FG_IP.format(ip), verify=True, auth=HTTPBasicAuth(username, password))
         count += 1
     try:
@@ -457,7 +455,7 @@ def fraudGuard(ip):
         rate = C.NONE
         logging.error(C.FG + " - " + str(resp.text))
         if resp.status_code == 401:
-            print(C.FG + ": Unauthorised. Check credentials")
+            print(C.FG + ": Invalid key - " + get_keys[0] + " - Check credentials")
         elif str(resp.status_code).startswith('5'):
             print(C.FG + ": FraudGaurd is having problems. Please try again later")
         elif resp.status_code == 429:
@@ -567,28 +565,6 @@ def auth0(ip):
         return score
 
 
-# def hybrid(url):
-#     data = {
-#         'scan_type': 'all',
-#         'url': url
-#     }
-#     headers = {
-#         'api-key': key.get("hybrid_key"),
-#         'user-agent': 'Falcon Sandbox'
-#     }
-#     resp = requests.post(C.HYBRID_IP, data=data, headers=headers).json()
-#     report_id = resp['sha256']
-#     resp2 = requests.get("https://www.hybrid-analysis.com/api/v2/report/{}/summary".format(report_id),
-#                          headers=headers).json()
-#     with open("images_hybrid/" + report_id + ".png", "wb+") as img_sc:
-#         try:
-#             img_sc.write(requests.get("https://www.hybrid-analysis.com/api/v2/report/" + report_id + "/screenshots",
-#                                       headers=headers).content)
-#         except:
-#             pass
-#     return resp2['threat_level']
-
-
 def phishtank(url):
     if ss_mode:
         if ss.phishtank(url):
@@ -623,6 +599,51 @@ def phishtank(url):
     print(C.PHISH + ": " + str(result))
     logging.info(C.PHISH + " - " + str(result))
     return result
+
+# def hybrid(url):
+#     data = {
+#         'scan_type': 'all',
+#         'url': url
+#     }
+#     headers = {
+#         'api-key': key.get("hybrid_key"),
+#         'user-agent': 'Falcon Sandbox'
+#     }
+#     resp = requests.post(C.HYBRID_IP, data=data, headers=headers).json()
+#     report_id = resp['sha256']
+#     resp2 = requests.get("https://www.hybrid-analysis.com/api/v2/report/{}/summary".format(report_id),
+#                          headers=headers).json()
+#     with open("images_hybrid/" + report_id + ".png", "wb+") as img_sc:
+#         try:
+#             img_sc.write(requests.get("https://www.hybrid-analysis.com/api/v2/report/" + report_id + "/screenshots",
+#                                       headers=headers).content)
+#         except:
+#             pass
+#     return resp2['threat_level']
+
+# def alienVaultIP(ip):
+#     alerts = []
+#     otx = OTXv2(api.get("av_apikey"), server='https://otx.alienvault.com/')
+#     result = otx.get_indicator_details_by_section(IndicatorTypes.IPv4, ip, 'reputation')
+#     # print(str(result))
+#     return str(result['reputation']['threat_score']) +" out of 7"
+#     # validation = getValue(result, ['validation'])
+#     # if not validation:
+#     #     pulses = getValue(result, ['pulse_info', 'pulses'])
+#     #     if pulses:
+#     #         for pulse in pulses:
+#     #             if 'name' in pulse:
+#     #                 alerts.append('In pulse: ' + pulse['name'])
+#     #
+#     # return str(alerts)
+#
+# def alienVaultURL(url):
+#     alerts = []
+#     otx = OTXv2(api.get("av_apikey"), server='https://otx.alienvault.com/')
+#     result = otx.get_indicator_details_full(IndicatorTypes.URL, url)
+#     print(str(result))
+#     return str(result['reputation']['threat_score']) +" out of 7"
+
 
 def isIP(ip):
     if ip == "":

@@ -22,3 +22,6 @@ auth0_key =
 [PhishTank]
 phish_key =
 phish_user =
+
+[FraudGuard replace below]
+fg_keys = username:password, username2:password2
