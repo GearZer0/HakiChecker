@@ -821,8 +821,9 @@ if __name__ == "__main__":
                         ss.makeFileName(h)
                     dataset = hashmode(h)
                     save_record(dataset, C.HASH_MODE)
-
             print("---------------------------------------\nTotal Time Elapsed: " + str(round(time() - start, 2)))
+        if os.path.exists("debug.log"):
+            os.remove("debug.log")
 
     else:  # Incorrect command line arg
         helptext()
