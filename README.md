@@ -1,14 +1,15 @@
 # Tools
 There are 2 tools available. 
-1. HakiChecker tool
+**1. HakiChecker tool**
 
-   Checks reputation of IP addresses, Urls, Hashes or Files from multiple OSINTs.
-   It supports **screenshot mode** where screenshot of the OSINT results are taken automatically.
+    Checks reputation of IP addresses, Urls, Hashes or Files from multiple OSINTs.
+    It supports **screenshot mode** where screenshot of the OSINT results are taken automatically.
    
-2. AutomateEmail tool
+**2. AutomateEmail tool**
 
     Another is AutomateEmail tool which automatically download attachment from email, extract the IP addresses 
     from the attachment and run it with HakiChekcker.py for ip reputation check and then email the results. 
+    Scroll below for the setup instructions.
     
 # 1. HakiChecker
 Checks reputation of IP addresses, Urls, Hashes or Files from multiple OSINTs.
@@ -289,7 +290,8 @@ https://talosintelligence.com/reputation_center/support#faq3
 
 AutomateEmail tool automatically download attachment from email, extract the IP addresses 
 from the attachment and run it with HakiChekcker.py for ip reputation check and then email the results. 
-
+Please make sure that configuration for OSINTs (VirusTotal, AbusedIPDB, FraudGuard, IBM, Auth0) are set up as explained 
+above.
 
 ##### Breakdown of the automation steps
 1. Download the excel attachment in the email
@@ -331,15 +333,15 @@ Open up emailTemplate.txt and fill in respectively.
     
 ## How to run
 There are 2 methods.
-1) Use commandline interface
-2) Use Executable file to run with a click
+A) Use commandline interface
+B) Use Executable file to run with a click
 
-### 1. Commandline Interface
+### A. Commandline Interface
 ```console
 python AutomateEmail.py
 ```
 
-### 2. Executable File
+### B. Executable File
 First, it needs to be configured.
 1. Open `AutomateEmail.bat` file as text file
 2. Edit `C:\Users\xxxx\HakiChecker` to the path that HakiChecker directory is saved in
