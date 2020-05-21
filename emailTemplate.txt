@@ -1,0 +1,9 @@
+[[AutomateEmail]]
+mailbox_name =
+your_email =
+recipient_email =
+email_subject =
+email_body =
+
+[If empty, default is: SP Daily Summary Report 19 April 2020 - where the date is today's date]
+target_email_subject =

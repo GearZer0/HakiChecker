@@ -1,8 +1,19 @@
-# HakiChecker
+# Tools
+There are 2 tools available. 
+1. HakiChecker tool
 
-This tool check the reputation of IP addresses, Urls, Hashes or Files from multiple OSINT. Everything All-in-One! 
+   Checks reputation of IP addresses, Urls, Hashes or Files from multiple OSINTs.
+   It supports **screenshot mode** where screenshot of the OSINT results are taken automatically.
+   
+2. AutomateEmail tool
+
+    Another is AutomateEmail tool which automatically download attachment from email, extract the IP addresses 
+    from the attachment and run it with HakiChekcker.py for ip reputation check and then email the results. 
+    
+# 1. HakiChecker
+Checks reputation of IP addresses, Urls, Hashes or Files from multiple OSINTs.
 It supports **screenshot mode** where screenshot of the OSINT results are taken automatically.
-
+   
 ## OSINT used
 ##### IP Address Reputation Check
 * IBM, VirusTotal, AbusedIPDB, FraudGuard, Auth0, CiscoTalos
@@ -272,3 +283,68 @@ https://faq.fraudguard.io/threat-levels
 https://developers.google.com/safe-browsing/v4/lookup-api
 https://developers.google.com/safe-browsing/v4/reference/rest/v4/ThreatType
 https://talosintelligence.com/reputation_center/support#faq3
+
+
+# 2. AutomateEmail tool
+
+AutomateEmail tool automatically download attachment from email, extract the IP addresses 
+from the attachment and run it with HakiChekcker.py for ip reputation check and then email the results. 
+
+
+##### Breakdown of the automation steps
+1. Download the excel attachment in the email
+2. Extract the IP addresses in the attachment file
+3. Delete duplicate IP addresses in the excel
+4. Carry out IP reputation check on the excel with HakiChecker.py
+5. Retrieve the result and send email to recipient
+
+## Configuration
+Open up emailTemplate.txt and fill in respectively. 
+1. `mailbox_name`
+   
+   If you do not know what is your `mailbox_name`, refer to the diagram below for where you can find your `mailbox_name`.
+    
+    ![email](https://user-images.githubusercontent.com/42865415/82517494-d5ce2500-9b4f-11ea-87ef-63babf6406fe.png)
+
+2. `your_email`
+   
+   This should be your outlook email address
+   
+3. `recipient_email`
+
+    This is who you are going to send the email to. ** recommended to put recipient as yourself and check the email 
+    before sending out to the actual recipient.
+    
+4. `email_subject`
+
+    Subject of the email to be sent.
+    
+5. `email_body`
+    
+    Body of the email to be sent. 
+
+6. `target_email_subject`
+    
+    The subject of the email with the attachment to be used for IP reputation check. This can be left blank as the 
+    **default will be "SP Daily Summary Report DD Month YYYY"** format where the date will be today's date. If you wish to 
+    run this tool on another email with different date or subject, please fill in the exact email subject here.
+    
+## How to run
+There are 2 methods.
+1) Use commandline interface
+2) Use Executable file to run with a click
+
+### 1. Commandline Interface
+```console
+python AutomateEmail.py
+```
+
+### 2. Executable File
+First, it needs to be configured.
+1. Open `AutomateEmail.bat` file as text file
+2. Edit `C:\Users\xxxx\HakiChecker` to the path that HakiChecker directory is saved in
+3. Save and close
+
+After this, just double click on the file to run it. This .bat file can be placed anywhere for example, it can be placed 
+in Desktop and when double clicked, it will run.
+

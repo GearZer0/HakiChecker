@@ -1,3 +1,4 @@
+appdirs==1.4.4
 attrs==19.3.0
 Automat==20.2.0
 beautifulsoup4==4.9.0
@@ -9,6 +10,8 @@ constantly==15.1.0
 cryptography==2.9.2
 cssselect==1.1.0
 decorator==4.4.2
+distlib==0.3.0
+filelock==3.0.12
 hyperlink==19.0.0
 idna==2.9
 incremental==17.5.0
@@ -26,6 +29,7 @@ PyHamcrest==2.0.2
 pyrsistent==0.16.0
 python-dateutil==2.8.1
 pytz==2019.3
+pywin32==227
 queuelib==1.5.0
 requests==2.23.0
 selenium==3.141.0
@@ -36,5 +40,7 @@ soupsieve==2.0
 urllib3==1.25.8
 validator-collection==1.4.1
 validators==0.15.0
+virtualenv==20.0.20
 w3lib==1.21.0
+xlrd==1.2.0
 zope.interface==5.1.0
