@@ -1,4 +1,6 @@
 import logging
+from time import sleep
+
 from selenium import webdriver
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
@@ -188,13 +190,15 @@ class Screenshot(object):
         driver.get(C.VT_SS.format(identifier=identifier, target=target))
 
         try:
-            driver.find_element_by_tag_name('vt-virustotal-app')
-            # element_present = EC.presence_of_element_located((By.TAG_NAME, 'vt-virustotal-app'))
-            # WebDriverWait(driver, 1).until(element_present)
+            element_present = EC.presence_of_element_located((By.TAG_NAME, 'vt-virustotal-app'))
+            WebDriverWait(driver, timeout).until(element_present)
             ## To check scores are same with the VT API
-            # root = str(driver.find_element_by_tag_name('vt-virustotal-app').text)
-            # res = root.find("Community\nScore")
-            # substr = root[res - 10:res - 1]
+            root = str(driver.find_element_by_tag_name('vt-virustotal-app').text)
+            res = root.find("Community\nScore")
+            while res is -1:
+                sleep(1)
+                root = str(driver.find_element_by_tag_name('vt-virustotal-app').text)
+                res = root.find("Community\nScore")
             # positives = int(''.join(list(filter(str.isdigit, substr.split("/")[0]))))
             # total = int(''.join(list(filter(str.isdigit, substr.split("/")[1]))))
             # rate = str(positives) + " out of " + str(total)

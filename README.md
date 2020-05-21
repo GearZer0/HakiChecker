@@ -91,6 +91,11 @@ git clone https://github.com/GearZer0/HakiChecker.git
 ```
 Then install the requirements via:
 ```
+pip install beautifulsoup4==4.9.0, pywin32==227, validator-collection==1.4.1, xlrd==1.2.0, pywin32==227, 
+requests==2.23.0, selenium==3.141.0
+```
+If it does not work later, install all the possible requirements via
+```
 pip install -r requirements.txt
 ```
 
