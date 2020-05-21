@@ -136,7 +136,8 @@ class Screenshot(object):
         # WebDriverWait(driver, timeout).until(element_present)
         ## To print score
         try:
-            driver.find_element_by_id('report')
+            element_present = EC.presence_of_element_located((By.ID, 'report'))
+            WebDriverWait(driver, timeout).until(element_present)
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             riskLevel = soup.find('div', attrs={'class': 'scorebackgroundfilter numtitle'}).text.split()[0]
             if riskLevel != "Unknown":
