@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pathlib import Path
+import pywintypes
 import xlrd
 import win32com.client
 from datetime import datetime
@@ -7,7 +9,7 @@ import subprocess
 import os
 from time import sleep
 
-key = {}
+template = {}
 
 
 def init():
@@ -15,23 +17,26 @@ def init():
         for line in f:
             if line != "\n" and not line.startswith('['):
                 (k, val) = line.split("=", 1)
-                key[k.strip()] = val.strip()
+                template[k.strip()] = val.strip()
 
 
 def downloadAttach():
-    Outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    Inbox = Outlook.Folders("***REMOVED***").Folders.Item("Inbox")
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    inbox = outlook.Folders(template.get("mailbox_name")).Folders.Item("Inbox")
     today = datetime.now().strftime("%d %B %Y")
-    file_name = "%SP Daily Summary Report  "
-    Filter = ("@SQL=" + chr(34) + "urn:schemas:httpmail:subject" +
-              chr(34) + " Like '" + file_name + "' AND " +
-              chr(34) + "urn:schemas:httpmail:hasattachment" +
-              chr(34) + "=1")
+    target_name = "%SP Daily Summary Report {}".format(today)
+    if template.get("target_email_subject"):
+        target_name = template.get("target_email_subject")
+    print(target_name)
+    filter_cond = ("@SQL=" + chr(34) + "urn:schemas:httpmail:subject" +
+                   chr(34) + " Like '" + target_name + "' AND " +
+                   chr(34) + "urn:schemas:httpmail:hasattachment" +
+                   chr(34) + "=1")
 
-    items = Inbox.Items.Restrict(Filter)
+    items = inbox.Items.Restrict(filter_cond)
     for item in items:
         for attachment in item.Attachments:
-            print(attachment.FileName)
+            print("Downloading attachment " + attachment.FileName)
             attachment.SaveAsFile(os.getcwd() + "/" + attachment.FileName)
             return attachment.FileName
 
@@ -39,47 +44,43 @@ def downloadAttach():
 def sendEmail(filename):
     outlook = win32com.client.Dispatch('outlook.application')
     mail = outlook.CreateItem(0)
-    mail.To = '***REMOVED***'
-    mail.Subject = 'test'
-    mail.Body = 'Hello, \nHehe'
+    mail.To = template.get("recipient_email")
+    mail.Subject = template.get("email_subject")
+    mail.Body = template.get("email_body")
     #   mail.HTMLBody = '<h2>HTML Message body</h2>' #this field is optional
 
-    # To attach a file to the email (optional):
+    # Attach a file to email
     attachment = filename
     mail.Attachments.Add(attachment)
 
-    mail.SentOnBehalfOfName = '***REMOVED***'
+    mail.SentOnBehalfOfName = template.get("your_email")
     mail.Send()
-    print("Email sent ...")
+    print("Email sent to " + template.get("recipient_email"))
 
 
 if __name__ == "__main__":
-    print("Downloading attachment")
-
-    # today = datetime.now().strftime("%Y%m%d")
+    init()
     file_name = downloadAttach()
     wb = xlrd.open_workbook(file_name)
     sheet = wb.sheet_by_index(0)
     all_ips = []
     for i in range(sheet.nrows):
         cell_data = sheet.cell_value(i, 4)
-        IP = re.findall('[\d]+.[\d]+.[\d]+.[\d]+', cell_data)
-        if len(IP):
-            IP = IP[0]
-            all_ips.append(IP)
+        ip = re.search('[\d]+.[\d]+.[\d]+.[\d]+', cell_data)
+        if ip is not None:
+            all_ips.append(ip)
+    if os.path.exists(file_name):
+        os.remove(file_name)
     all_ips = list(set(all_ips))
+    with open('tmp.txt', 'a+') as ip_file:
+        for ip in all_ips:
+            ip_file.write(ip + "\n")
+    print("Running HakiChecker ... please wait for output to populate shortly ...")
+    run_bot = subprocess.Popen('python HakiChecker.py -ip tmp.txt'.split(' ')).wait()
+    files = sorted(os.listdir('Results'), key=lambda x: os.path.getctime(os.path.join(os.getcwd(), "Results")))
+    print(files)
+    sendEmail(os.getcwd() + "/Results/" + files[-1])
+
+    # Remove files created
     if os.path.exists("tmp.txt"):
         os.remove("tmp.txt")
-    with open('tmp.txt', 'a+') as ip_file:
-        ip_file.write("156.255.30.244")
-        # for ip in all_ips:
-        #     ip_file.write(ip + "\n")
-    print("Running command ... please wait for output to populate shortly ...")
-    run_bot = subprocess.Popen('python HakiChecker.py -ip tmp.txt'.split(' ')).wait()
-    while True:
-        sleep(1)
-        files = os.listdir("Results")
-        if len(files) > 0:
-            # files = sorted(filter(os.path.isfile, os.listdir('Results')), key=os.path.getmtime)
-            sendEmail(os.getcwd() + "/Results/" + files[0])
-            break
