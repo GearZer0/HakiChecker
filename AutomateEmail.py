@@ -28,7 +28,7 @@ def downloadAttach():
         print("Error: mailbox_name defined in emailTemplate.txt does not exists")
         quit()
     today = datetime.now().strftime("%d %B %Y")
-    target_name = "SP Daily Summary Report {}".format(today)
+    target_name = " {}".format(today) #input the email subject that you want to capture
     if template.get("target_email_subject"):
         target_name = template.get("target_email_subject")
     filter_cond = ("@SQL=" + chr(34) + "urn:schemas:httpmail:subject" +
