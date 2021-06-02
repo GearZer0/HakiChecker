@@ -37,7 +37,7 @@ self==2019.4.13
 service-identity==18.1.0
 six==1.14.0
 soupsieve==2.0
-urllib3==1.25.8
+urllib3==1.26.5
 validator-collection==1.4.1
 validators==0.15.0
 virtualenv==20.0.20
