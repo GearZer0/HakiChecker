@@ -29,7 +29,7 @@ PyHamcrest==2.0.2
 pyrsistent==0.16.0
 python-dateutil==2.8.1
 pytz==2019.3
-pywin32==227
+pywin32==301
 queuelib==1.5.0
 requests==2.23.0
 selenium==3.141.0
