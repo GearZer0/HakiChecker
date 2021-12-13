@@ -16,7 +16,7 @@ hyperlink==19.0.0
 idna==2.9
 incremental==17.5.0
 jsonschema==3.2.0
-lxml==4.5.0
+lxml==4.6.5
 netaddr==0.7.19
 parsel==1.5.2
 Protego==0.1.16
